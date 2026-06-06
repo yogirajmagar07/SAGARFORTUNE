@@ -159,7 +159,7 @@ def api_readings():
 
     from_time = request.args.get("fromTime")
     to_time = request.args.get("toTime")
-    deviceid = "susanmpa"
+    deviceid = "susanad"
 
     if not from_time or not to_time:
         return jsonify({"error": "fromTime and toTime required"}), 400
@@ -301,7 +301,7 @@ def parse_dt(value):
 
 def fetch_engine_consumption(engine_type, start, end, interval='hour'):
     """Fetch engine consumption data based on engine type"""
-    deviceid = "susanmpa"
+    deviceid = "susanad"
     
     # Define meter pairs for each engine type
     engine_config = {
