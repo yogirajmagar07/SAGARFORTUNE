@@ -43,7 +43,7 @@ body{
 /* Row layout */
 .row{
     display:grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap:10px;
     margin-top:10px;
 }
@@ -142,14 +142,12 @@ const panels = [
 ];
 // Row structure
 const row1 = [
-    {label:"Mass Flow (T/H)", tag:"MassFlow"},
-    {label:"Volume Flow (L/H)", tag:"VolumeFlow"},
-    {label:"Density (kg/m³)", tag:"Density"}
+    {label:"Total Flow (kg)", tag:"Masstotal"},
+    {label:"Total Flow (m³)", tag:"Volumetotal"}
 ];
 
 const row2 = [
-    {label:"Total Flow (kg)", tag:"Masstotal"},
-    {label:"Total Flow (m³)", tag:"Volumetotal"},
+    {label:"Density (kg/m³)", tag:"Density"},
     {label:"Temperature (°C)", tag:"Temp"}
 ];
 
