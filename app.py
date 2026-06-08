@@ -214,15 +214,15 @@ def api_readings():
                 if current_start <= ts_dt < current_end:
 
                     # Accumulate values for each meter
-                    total_ft1 += float(e.get("FT1MassFlow") or 0)
-                    total_ft2 += float(e.get("FT2MassFlow") or 0)
-                    total_ft3 += float(e.get("FT3MassFlow") or 0)
-                    total_ft4 += float(e.get("FT4MassFlow") or 0)
-                    total_ft5 += float(e.get("FT5MassFlow") or 0)
-                    total_ft6 += float(e.get("FT6MassFlow") or 0)
-                    total_ft7 += float(e.get("FT7MassFlow") or 0)
-                    total_ft8 += float(e.get("FT8MassFlow") or 0)
-                    total_ft9 += float(e.get("FT9MassFlow") or 0)
+                    total_ft1 += float(e.get("FT1Masstotal") or 0)
+                    total_ft2 += float(e.get("FT2Masstotal") or 0)
+                    total_ft3 += float(e.get("FT3Masstotal") or 0)
+                    total_ft4 += float(e.get("FT4Masstotal") or 0)
+                    total_ft5 += float(e.get("FT5Masstotal") or 0)
+                    total_ft6 += float(e.get("FT6Masstotal") or 0)
+                    total_ft7 += float(e.get("FT7Masstotal") or 0)
+                    total_ft8 += float(e.get("FT8Masstotal") or 0)
+                    total_ft9 += float(e.get("FT9Masstotal") or 0)
 
             # Calculate engine and generator totals
             # Main Engine 1: FT1 (Inlet) + FT2 (Outlet)
@@ -245,8 +245,8 @@ def api_readings():
                 "measurementStartTime": current_start.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "measurementEndTime": (current_end - timedelta(seconds=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "kind": "VESSEL",
-                "mmsi": "419001491",
-                "imo": "9320910",
+                "mmsi": "419001287",
+                "imo": "9458327",
                 "consumption": {
                     "mainEnginesTotal": round(total_main_engines, 8),
                     "generatorsTotal": round(total_generators, 8),
