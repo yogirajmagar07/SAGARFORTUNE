@@ -170,7 +170,7 @@ button:hover {
 <body>
 
 <div class="header">
-    <span style="font-weight:bold">MP AHTS-1 Flow Meter Reports</span>
+    <span style="font-weight:bold">SAGARFORTUNE Flow Meter Reports</span>
     <div style="float:right">
         <a href="/" style="color:white;margin-right:15px;">Dashboard</a>
         <a href="/reports" style="color:white;margin-right:15px;">Reports</a>
@@ -199,11 +199,13 @@ button:hover {
         <div class="filter-item">
             <label>⚙️ Select Engine/Generator</label>
             <select id="engineGroup" onchange="updateGroupInfo()">
-                <option value="PME">PME - Main Engine (P) </option>
-                <option value="SME">SME - Main Engine (S) </option>
-                <option value="PAE">PAE - Auxiliary Engine (P) </option>
-                <option value="SAE">SAE - Auxiliary Engine (S) </option>
-                <option value="consumpution">TOTAL - Total Consumption </option>
+                    <option value="PME">PME - Main Engine (P)</option>
+                    <option value="SME">SME - Main Engine (S)</option>
+                    <option value="AE1">AE1 - Auxiliary Engine 1</option>
+                    <option value="AE2">AE2 - Auxiliary Engine 2</option>
+                    <option value="AE3">AE3 - Auxiliary Engine 3</option>
+                    <option value="AE4">AE4 - Auxiliary Engine 4</option>
+                    <option value="consumpution">TOTAL - Total Consumption </option>
             </select>
         </div>
 
@@ -235,36 +237,101 @@ button:hover {
 
 <script>
 // Engine group configuration
+// const engineConfig = {
+//     'PME': {
+//         name: 'PME - Main Engine (P)',
+//         formula: 'FT1 Volume Total - FT2 Volume Total',
+//         description: 'FT1VolumeTotal - FT2VolumeTotal',
+//         meters: 'FT1 (Inlet), FT2 (Outlet)'
+//     },
+//     'SME': {
+//         name: 'SME - Main Engine (S)',
+//         formula: 'FT3 Volume Total - FT4 Volume Total',
+//         description: 'FT3VolumeTotal - FT4VolumeTotal',
+//         meters: 'FT3 (Inlet), FT4 (Outlet)'
+//     },
+//     'PAE': {
+//         name: 'PAE - Auxiliary Engine (P)',
+//         formula: 'FT5 Volume Total - FT6 Volume Total',
+//         description: 'FT5VolumeTotal - FT6VolumeTotal',
+//         meters: 'FT5 (Inlet), FT6 (Outlet)'
+//     },
+//     'SAE': {
+//         name: 'SAE - Auxiliary Engine (S)',
+//         formula: 'FT7 Volume Total - FT8 Volume Total',
+//         description: 'FT7VolumeTotal - FT8VolumeTotal',
+//         meters: 'FT7 (Inlet), FT8 (Outlet)'
+//     },
+//     'consumpution': {
+//         name: 'TOTAL - Total Consumption',
+//         formula: 'FT9 Volume Total',
+//         description: 'FT9VolumeTotal',
+//         meters: 'FT9 (Bunker Flow)'
+//     }
+// };
+
 const engineConfig = {
-    'PME': {
-        name: 'PME - Main Engine (P)',
-        formula: 'FT1 Volume Total - FT2 Volume Total',
-        description: 'FT1VolumeTotal - FT2VolumeTotal',
-        meters: 'FT1 (Inlet), FT2 (Outlet)'
+
+    PME: {
+        name: "PME - Main Engine (P)",
+        formula: "FT1Volumetotal - FT2Volumetotal",
+        description: "PME Consumption",
+        meters: "FT1, FT2"
     },
-    'SME': {
-        name: 'SME - Main Engine (S)',
-        formula: 'FT3 Volume Total - FT4 Volume Total',
-        description: 'FT3VolumeTotal - FT4VolumeTotal',
-        meters: 'FT3 (Inlet), FT4 (Outlet)'
+
+    SME: {
+        name: "SME - Main Engine (S)",
+        formula: "FT3Volumetotal - FT4Volumetotal",
+        description: "SME Consumption",
+        meters: "FT3, FT4"
     },
-    'PAE': {
-        name: 'PAE - Auxiliary Engine (P)',
-        formula: 'FT5 Volume Total - FT6 Volume Total',
-        description: 'FT5VolumeTotal - FT6VolumeTotal',
-        meters: 'FT5 (Inlet), FT6 (Outlet)'
+
+    AE1: {
+        name: "AE1 - Auxiliary Engine 1",
+        formula: "FT5Volumetotal - FT6Volumetotal",
+        description: "AE1 Consumption",
+        meters: "FT5, FT6"
     },
-    'SAE': {
-        name: 'SAE - Auxiliary Engine (S)',
-        formula: 'FT7 Volume Total - FT8 Volume Total',
-        description: 'FT7VolumeTotal - FT8VolumeTotal',
-        meters: 'FT7 (Inlet), FT8 (Outlet)'
+
+    AE2: {
+        name: "AE2 - Auxiliary Engine 2",
+        formula: "FT7Volumetotal - FT8Volumetotal",
+        description: "AE2 Consumption",
+        meters: "FT7, FT8"
     },
-    'consumpution': {
-        name: 'TOTAL - Total Consumption',
-        formula: 'FT9 Volume Total',
-        description: 'FT9VolumeTotal',
-        meters: 'FT9 (Bunker Flow)'
+
+    AE3: {
+        name: "AE3 - Auxiliary Engine 3",
+        formula: "FT9Volumetotal - FT10Volumetotal",
+        description: "AE3 Consumption",
+        meters: "FT9, FT10"
+    },
+
+    AE4: {
+        name: "AE4 - Auxiliary Engine 4",
+        formula: "FT11Volumetotal - FT12Volumetotal",
+        description: "AE4 Consumption",
+        meters: "FT11, FT12"
+    },
+
+    FT1: { name:"FT1 - PME Inlet", formula:"FT1Volumetotal", description:"Individual Meter", meters:"FT1" },
+    FT2: { name:"FT2 - PME Outlet", formula:"FT2Volumetotal", description:"Individual Meter", meters:"FT2" },
+    FT3: { name:"FT3 - SME Inlet", formula:"FT3Volumetotal", description:"Individual Meter", meters:"FT3" },
+    FT4: { name:"FT4 - SME Outlet", formula:"FT4Volumetotal", description:"Individual Meter", meters:"FT4" },
+    FT5: { name:"FT5 - AE1 Inlet", formula:"FT5Volumetotal", description:"Individual Meter", meters:"FT5" },
+    FT6: { name:"FT6 - AE1 Outlet", formula:"FT6Volumetotal", description:"Individual Meter", meters:"FT6" },
+    FT7: { name:"FT7 - AE2 Inlet", formula:"FT7Volumetotal", description:"Individual Meter", meters:"FT7" },
+    FT8: { name:"FT8 - AE2 Outlet", formula:"FT8Volumetotal", description:"Individual Meter", meters:"FT8" },
+    FT9: { name:"FT9 - AE3 Inlet", formula:"FT9Volumetotal", description:"Individual Meter", meters:"FT9" },
+    FT10:{ name:"FT10 - AE3 Outlet", formula:"FT10Volumetotal", description:"Individual Meter", meters:"FT10" },
+    FT11:{ name:"FT11 - AE4 Inlet", formula:"FT11Volumetotal", description:"Individual Meter", meters:"FT11" },
+    FT12:{ name:"FT12 - AE4 Outlet", formula:"FT12Volumetotal", description:"Individual Meter", meters:"FT12" },
+
+    TOTAL: {
+        name: "TOTAL Consumption",
+        formula: "(FT1-FT2)+(FT3-FT4)+(FT5-FT6)+(FT7-FT8)+(FT9-FT10)+(FT11-FT12)",
+        description: "Total Vessel Consumption",
+        meters: "FT1 to FT12"
     }
 };
 
