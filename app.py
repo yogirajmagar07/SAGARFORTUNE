@@ -181,7 +181,7 @@ def api_readings():
             f"and TimestampIST le '{to_time}'"
         )
 
-        entities = list(table_client_2.query_entities(query))
+        entities = list(table_client.query_entities(query))
 
         current_start = start_dt
 
