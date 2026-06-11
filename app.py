@@ -594,7 +594,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
         return None
 
     query = f"PartitionKey eq '{deviceid}'"
-    entities = list(table_client_2.query_entities(query))
+    entities = list(table_client.query_entities(query))
 
     filtered_entities = []
     for e in entities:
