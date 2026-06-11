@@ -566,15 +566,75 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
     deviceid = "susanad"
 
     engine_config = {
-        "PME": {"name": "PME Main Engine (P)", "inlet": "FT1", "outlet": "FT2"},
-        "SME": {"name": "SME Main Engine (S)", "inlet": "FT3", "outlet": "FT4"},
-        "AE1": {"name": "AE1 Auxiliary Engine 1", "inlet": "FT5", "outlet": "FT6"},
-        "AE2": {"name": "AE2 Auxiliary Engine 2", "inlet": "FT7", "outlet": "FT8"},
-        "AE3": {"name": "AE3 Auxiliary Engine 3", "inlet": "FT9", "outlet": "FT10"},
-        "AE4": {"name": "AE4 Auxiliary Engine 4", "inlet": "FT11", "outlet": "FT12"},
+        "PME": {
+            "name": "PME Main Engine (P)",
+            "inlet_col": "FT1Volumetotal",
+            "outlet_col": "FT2Volumetotal",
+            "total_col": "ME1VolumeTotal",
+            "inlet_temp_col": "FT1Temp",
+            "outlet_temp_col": "FT2Temp",
+            "inlet_density_col": "FT1Density",
+            "outlet_density_col": "FT2Density",
+            "formula": "ME1VolumeTotal"
+        },
+        "SME": {
+            "name": "SME Main Engine (S)",
+            "inlet_col": "FT3Volumetotal",
+            "outlet_col": "FT4Volumetotal",
+            "total_col": "ME2VolumeTotal",
+            "inlet_temp_col": "FT3Temp",
+            "outlet_temp_col": "FT4Temp",
+            "inlet_density_col": "FT3Density",
+            "outlet_density_col": "FT4Density",
+            "formula": "ME2VolumeTotal"
+        },
+        "AE1": {
+            "name": "AE1 Auxiliary Engine 1",
+            "inlet_col": "FT5Volumetotal",
+            "outlet_col": "FT6Volumetotal",
+            "total_col": "AE1VolumeTotal",
+            "inlet_temp_col": "FT5Temp",
+            "outlet_temp_col": "FT6Temp",
+            "inlet_density_col": "FT5Density",
+            "outlet_density_col": "FT6Density",
+            "formula": "AE1VolumeTotal"
+        },
+        "AE2": {
+            "name": "AE2 Auxiliary Engine 2",
+            "inlet_col": "FT7Volumetotal",
+            "outlet_col": "FT8Volumetotal",
+            "total_col": "AE2VolumeTotal",
+            "inlet_temp_col": "FT7Temp",
+            "outlet_temp_col": "FT8Temp",
+            "inlet_density_col": "FT7Density",
+            "outlet_density_col": "FT8Density",
+            "formula": "AE2VolumeTotal"
+        },
+        "AE3": {
+            "name": "AE3 Auxiliary Engine 3",
+            "inlet_col": "FT9Volumetotal",
+            "outlet_col": "FT10Volumetotal",
+            "total_col": "AE3VolumeTotal",
+            "inlet_temp_col": "FT9Temp",
+            "outlet_temp_col": "FT10Temp",
+            "inlet_density_col": "FT9Density",
+            "outlet_density_col": "FT10Density",
+            "formula": "AE3VolumeTotal"
+        },
+        "AE4": {
+            "name": "AE4 Auxiliary Engine 4",
+            "inlet_col": "FT11Volumetotal",
+            "outlet_col": "FT12Volumetotal",
+            "total_col": "AE4VolumeTotal",
+            "inlet_temp_col": "FT11Temp",
+            "outlet_temp_col": "FT12Temp",
+            "inlet_density_col": "FT11Density",
+            "outlet_density_col": "FT12Density",
+            "formula": "AE4VolumeTotal"
+        },
         "TOTAL": {
             "name": "TOTAL Consumption",
-            "formula": "(FT1-FT2)+(FT3-FT4)+(FT5-FT6)+(FT7-FT8)+(FT9-FT10)+(FT11-FT12)"
+            "formula": "ME1 + ME2 + AE1 + AE2 + AE3 + AE4"
         }
     }
 
@@ -582,9 +642,6 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
         return None
 
     config = engine_config[engine_type]
-
-    if engine_type != "TOTAL":
-        config["formula"] = f"{config['inlet']}Volumetotal - {config['outlet']}Volumetotal"
 
     try:
         start_dt = parse_dt(start)
@@ -597,10 +654,12 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
     entities = list(table_client.query_entities(query))
 
     filtered_entities = []
+
     for e in entities:
         ts = e.get("TimestampIST")
         if not ts:
             continue
+
         try:
             ts_dt = parse_dt(ts)
             if start_dt <= ts_dt <= end_dt:
@@ -628,15 +687,16 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
     def get_interval_key(dt, ts):
         if interval == "minute":
             return dt.strftime("%Y-%m-%d %H:%M")
-        if interval == "hour":
+        elif interval == "hour":
             return dt.strftime("%Y-%m-%d %H:00")
-        if interval == "daily":
+        elif interval == "daily":
             return dt.strftime("%Y-%m-%d")
-        if interval == "monthly":
+        elif interval == "monthly":
             return dt.strftime("%Y-%m")
-        if interval == "yearly":
+        elif interval == "yearly":
             return dt.strftime("%Y")
-        return ts
+        else:
+            return ts
 
     raw_records = []
 
@@ -646,68 +706,61 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
         interval_key = get_interval_key(ts_dt, ts)
 
         if engine_type == "TOTAL":
-            parts = {}
-            total = 0
+            me1 = get_float(e, "ME1VolumeTotal")
+            me2 = get_float(e, "ME2VolumeTotal")
+            ae1 = get_float(e, "AE1VolumeTotal")
+            ae2 = get_float(e, "AE2VolumeTotal")
+            ae3 = get_float(e, "AE3VolumeTotal")
+            ae4 = get_float(e, "AE4VolumeTotal")
 
-            for key, cfg in engine_config.items():
-                if key == "TOTAL":
-                    continue
-
-                inlet = get_float(e, cfg["inlet"] + "Volumetotal")
-                outlet = get_float(e, cfg["outlet"] + "Volumetotal")
-                cons = inlet - outlet
-
-                parts[key] = round(cons, 5)
-                total += cons
+            total_consumption = me1 + me2 + ae1 + ae2 + ae3 + ae4
 
             record = {
                 "Timestamp": ts,
                 "Interval": interval_key,
                 "EngineType": engine_type,
                 "EngineName": config["name"],
-                "PME": parts["PME"],
-                "SME": parts["SME"],
-                "AE1": parts["AE1"],
-                "AE2": parts["AE2"],
-                "AE3": parts["AE3"],
-                "AE4": parts["AE4"],
-                "Consumption": round(total, 5),
-                "InletValue": 0,
-                "OutletValue": 0
+
+                "ME1": round(me1, 5),
+                "ME2": round(me2, 5),
+                "AE1": round(ae1, 5),
+                "AE2": round(ae2, 5),
+                "AE3": round(ae3, 5),
+                "AE4": round(ae4, 5),
+
+                "Inlet": 0,
+                "Outlet": 0,
+                "TotalConsumption": round(total_consumption, 5),
+                "InletTemp": 0,
+                "OutletTemp": 0,
+                "InletDensity": 0,
+                "OutletDensity": 0,
+
+                "Consumption": round(total_consumption, 5)
             }
 
         else:
-            inlet = config["inlet"]
-            outlet = config["outlet"]
-
-            inlet_vol = get_float(e, inlet + "Volumetotal")
-            outlet_vol = get_float(e, outlet + "Volumetotal")
-            consumption = inlet_vol - outlet_vol
+            inlet_value = get_float(e, config["inlet_col"])
+            outlet_value = get_float(e, config["outlet_col"])
+            total_consumption = get_float(e, config["total_col"])
 
             record = {
                 "Timestamp": ts,
                 "Interval": interval_key,
                 "EngineType": engine_type,
                 "EngineName": config["name"],
-                "Consumption": round(consumption, 5),
 
-                f"{inlet}_VolumeTotal": round(inlet_vol, 5),
-                f"{outlet}_VolumeTotal": round(outlet_vol, 5),
+                "Inlet": round(inlet_value, 5),
+                "Outlet": round(outlet_value, 5),
+                "TotalConsumption": round(total_consumption, 5),
 
-                f"{inlet}_MassFlow": round(get_float(e, inlet + "MassFlow"), 5),
-                f"{outlet}_MassFlow": round(get_float(e, outlet + "MassFlow"), 5),
+                "InletTemp": round(get_float(e, config["inlet_temp_col"]), 2),
+                "OutletTemp": round(get_float(e, config["outlet_temp_col"]), 2),
 
-                f"{inlet}_MassTotal": round(get_float(e, inlet + "Masstotal"), 5),
-                f"{outlet}_MassTotal": round(get_float(e, outlet + "Masstotal"), 5),
+                "InletDensity": round(get_float(e, config["inlet_density_col"]), 2),
+                "OutletDensity": round(get_float(e, config["outlet_density_col"]), 2),
 
-                f"{inlet}_Temp": round(get_float(e, inlet + "Temp"), 2),
-                f"{outlet}_Temp": round(get_float(e, outlet + "Temp"), 2),
-
-                f"{inlet}_Density": round(get_float(e, inlet + "Density"), 2),
-                f"{outlet}_Density": round(get_float(e, outlet + "Density"), 2),
-
-                "InletValue": round(inlet_vol, 5),
-                "OutletValue": round(outlet_vol, 5)
+                "Consumption": round(total_consumption, 5)
             }
 
         raw_records.append(record)
@@ -727,75 +780,71 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
                     "EngineType": engine_type,
                     "EngineName": config["name"],
                     "RecordCount": 0,
+
+                    "Inlet": 0,
+                    "Outlet": 0,
+                    "TotalConsumption": 0,
+                    "InletTemp": 0,
+                    "OutletTemp": 0,
+                    "InletDensity": 0,
+                    "OutletDensity": 0,
+
                     "Consumption": 0
                 }
 
                 if engine_type == "TOTAL":
-                    for part in ["PME", "SME", "AE1", "AE2", "AE3", "AE4"]:
-                        grouped[key][part] = 0
-                else:
-                    inlet = config["inlet"]
-                    outlet = config["outlet"]
-                    for col in [
-                        f"{inlet}_VolumeTotal", f"{outlet}_VolumeTotal",
-                        f"{inlet}_MassFlow", f"{outlet}_MassFlow",
-                        f"{inlet}_MassTotal", f"{outlet}_MassTotal",
-                        f"{inlet}_Temp", f"{outlet}_Temp",
-                        f"{inlet}_Density", f"{outlet}_Density"
-                    ]:
-                        grouped[key][col] = 0
+                    grouped[key]["ME1"] = 0
+                    grouped[key]["ME2"] = 0
+                    grouped[key]["AE1"] = 0
+                    grouped[key]["AE2"] = 0
+                    grouped[key]["AE3"] = 0
+                    grouped[key]["AE4"] = 0
 
             grouped[key]["RecordCount"] += 1
-            grouped[key]["Consumption"] += r["Consumption"]
+
+            grouped[key]["Inlet"] += r.get("Inlet", 0)
+            grouped[key]["Outlet"] += r.get("Outlet", 0)
+            grouped[key]["TotalConsumption"] += r.get("TotalConsumption", 0)
+            grouped[key]["InletTemp"] += r.get("InletTemp", 0)
+            grouped[key]["OutletTemp"] += r.get("OutletTemp", 0)
+            grouped[key]["InletDensity"] += r.get("InletDensity", 0)
+            grouped[key]["OutletDensity"] += r.get("OutletDensity", 0)
+            grouped[key]["Consumption"] += r.get("Consumption", 0)
 
             if engine_type == "TOTAL":
-                for part in ["PME", "SME", "AE1", "AE2", "AE3", "AE4"]:
-                    grouped[key][part] += r.get(part, 0)
-            else:
-                inlet = config["inlet"]
-                outlet = config["outlet"]
-
-                for col in [
-                    f"{inlet}_VolumeTotal", f"{outlet}_VolumeTotal",
-                    f"{inlet}_MassTotal", f"{outlet}_MassTotal"
-                ]:
-                    grouped[key][col] += r.get(col, 0)
-
-                for col in [
-                    f"{inlet}_MassFlow", f"{outlet}_MassFlow",
-                    f"{inlet}_Temp", f"{outlet}_Temp",
-                    f"{inlet}_Density", f"{outlet}_Density"
-                ]:
-                    grouped[key][col] += r.get(col, 0)
+                grouped[key]["ME1"] += r.get("ME1", 0)
+                grouped[key]["ME2"] += r.get("ME2", 0)
+                grouped[key]["AE1"] += r.get("AE1", 0)
+                grouped[key]["AE2"] += r.get("AE2", 0)
+                grouped[key]["AE3"] += r.get("AE3", 0)
+                grouped[key]["AE4"] += r.get("AE4", 0)
 
         records = []
 
         for key, g in grouped.items():
             count = g["RecordCount"]
-            g["Consumption"] = round(g["Consumption"], 5)
 
             if engine_type == "TOTAL":
-                for part in ["PME", "SME", "AE1", "AE2", "AE3", "AE4"]:
-                    g[part] = round(g[part], 5)
+                g["ME1"] = round(g["ME1"], 5)
+                g["ME2"] = round(g["ME2"], 5)
+                g["AE1"] = round(g["AE1"], 5)
+                g["AE2"] = round(g["AE2"], 5)
+                g["AE3"] = round(g["AE3"], 5)
+                g["AE4"] = round(g["AE4"], 5)
+
+                g["TotalConsumption"] = round(g["TotalConsumption"], 5)
+                g["Consumption"] = round(g["Consumption"], 5)
             else:
-                inlet = config["inlet"]
-                outlet = config["outlet"]
+                g["Inlet"] = round(g["Inlet"], 5)
+                g["Outlet"] = round(g["Outlet"], 5)
+                g["TotalConsumption"] = round(g["TotalConsumption"], 5)
 
-                g["InletValue"] = round(g[f"{inlet}_VolumeTotal"], 5)
-                g["OutletValue"] = round(g[f"{outlet}_VolumeTotal"], 5)
+                g["InletTemp"] = round(g["InletTemp"] / count, 2)
+                g["OutletTemp"] = round(g["OutletTemp"] / count, 2)
+                g["InletDensity"] = round(g["InletDensity"] / count, 2)
+                g["OutletDensity"] = round(g["OutletDensity"] / count, 2)
 
-                for col in [
-                    f"{inlet}_MassFlow", f"{outlet}_MassFlow",
-                    f"{inlet}_Temp", f"{outlet}_Temp",
-                    f"{inlet}_Density", f"{outlet}_Density"
-                ]:
-                    g[col] = round(g[col] / count, 5)
-
-                for col in [
-                    f"{inlet}_VolumeTotal", f"{outlet}_VolumeTotal",
-                    f"{inlet}_MassTotal", f"{outlet}_MassTotal"
-                ]:
-                    g[col] = round(g[col], 5)
+                g["Consumption"] = round(g["TotalConsumption"], 5)
 
             records.append(g)
 
@@ -917,6 +966,7 @@ def download_pdf():
         from reportlab.pdfgen import canvas
         from math import ceil
 
+        # Get parameters
         engine_type = request.args.get("type", "PME")
         start = request.args.get("start", "").replace("T", " ")
         end = request.args.get("end", "").replace("T", " ")
@@ -925,32 +975,40 @@ def download_pdf():
         if not start or not end:
             return jsonify({"error": "Start and end time required"}), 400
 
+        # Fetch updated report data
         result = fetch_engine_consumption(engine_type, start, end, interval)
 
         if not result:
             return jsonify({"error": "Invalid engine type"}), 400
 
-        records = sorted(result["records"], key=lambda x: x["Timestamp"])
+        records = sorted(result["records"], key=lambda x: x.get("Timestamp", ""))
 
-        prev_consumption = None
+        # Add running total and difference
         running_total = 0
+        prev_consumption = None
 
         for record in records:
-            running_total += record.get("Consumption", 0)
+            current_consumption = float(record.get("Consumption", 0) or 0)
+
+            running_total += current_consumption
             record["RunningTotal"] = round(running_total, 5)
 
             if prev_consumption is None:
                 record["Consumption_Difference"] = 0
             else:
                 record["Consumption_Difference"] = round(
-                    record.get("Consumption", 0) - prev_consumption, 5
+                    current_consumption - prev_consumption, 5
                 )
 
-            prev_consumption = record.get("Consumption", 0)
+            prev_consumption = current_consumption
 
+        # Create PDF
         buffer = BytesIO()
         c = canvas.Canvas(buffer, pagesize=landscape(letter))
 
+        # =====================
+        # Title / Summary Page
+        # =====================
         c.setFont("Helvetica-Bold", 20)
         c.drawString(50, 550, f"{result['name']} Report")
 
@@ -968,7 +1026,15 @@ def download_pdf():
         c.drawString(50, 400, f"Total Consumption: {result['total_consumption']} L")
         c.drawString(50, 380, f"Average Consumption: {result['avg_consumption']} L")
 
-        c.line(50, 340, 750, 340)
+        if records:
+            c.drawString(50, 350, f"First Reading Time: {records[0].get('Timestamp', '')}")
+            c.drawString(50, 330, f"Last Reading Time: {records[-1].get('Timestamp', '')}")
+
+        c.line(50, 300, 750, 300)
+
+        # =====================
+        # Detailed Data Page
+        # =====================
         c.showPage()
 
         c.setFont("Helvetica-Bold", 16)
@@ -981,46 +1047,36 @@ def download_pdf():
         if not records:
             c.setFont("Helvetica", 12)
             c.drawString(50, 450, "No data found for selected date range")
-        else:
-            engine_map = {
-                "PME": {"inlet": "FT1", "outlet": "FT2"},
-                "SME": {"inlet": "FT3", "outlet": "FT4"},
-                "AE1": {"inlet": "FT5", "outlet": "FT6"},
-                "AE2": {"inlet": "FT7", "outlet": "FT8"},
-                "AE3": {"inlet": "FT9", "outlet": "FT10"},
-                "AE4": {"inlet": "FT11", "outlet": "FT12"},
-            }
 
+        else:
             def draw_headers(y):
                 c.setFont("Helvetica-Bold", 6)
 
                 if engine_type == "TOTAL":
                     headers = [
-                        ("Timestamp", 50),
-                        ("PME", 120),
-                        ("SME", 170),
-                        ("AE1", 220),
-                        ("AE2", 270),
-                        ("AE3", 320),
-                        ("AE4", 370),
-                        ("Total", 420),
-                        ("Diff", 470),
-                        ("Running", 520),
+                        ("Time", 50),
+                        ("ME1", 110),
+                        ("ME2", 155),
+                        ("AE1", 200),
+                        ("AE2", 245),
+                        ("AE3", 290),
+                        ("AE4", 335),
+                        ("Total", 385),
+                        ("Diff", 435),
+                        ("Running", 485),
                     ]
                 else:
                     headers = [
-                        ("Timestamp", 50),
-                        ("In Vol", 110),
-                        ("Out Vol", 160),
-                        ("Cons", 210),
-                        ("Diff", 260),
-                        ("Running", 310),
-                        ("In Mass", 360),
-                        ("Out Mass", 410),
-                        ("In Temp", 460),
-                        ("Out Temp", 510),
-                        ("In Density", 560),
-                        ("Out Density", 620),
+                        ("Time", 50),
+                        ("Inlet", 110),
+                        ("Outlet", 165),
+                        ("Total Cons.", 220),
+                        ("Diff", 285),
+                        ("Running", 335),
+                        ("In Temp", 395),
+                        ("Out Temp", 450),
+                        ("In Density", 510),
+                        ("Out Density", 580),
                     ]
 
                 for text, x in headers:
@@ -1028,34 +1084,33 @@ def download_pdf():
 
             def draw_record(record, y):
                 c.setFont("Helvetica", 5.5)
-                c.drawString(50, y, str(record.get("Timestamp", ""))[5:16])
+
+                timestamp = str(record.get("Timestamp", ""))
+                short_time = timestamp[5:16] if len(timestamp) >= 16 else timestamp
+
+                c.drawString(50, y, short_time)
 
                 if engine_type == "TOTAL":
-                    c.drawString(120, y, f"{record.get('PME', 0):.2f}")
-                    c.drawString(170, y, f"{record.get('SME', 0):.2f}")
-                    c.drawString(220, y, f"{record.get('AE1', 0):.2f}")
-                    c.drawString(270, y, f"{record.get('AE2', 0):.2f}")
-                    c.drawString(320, y, f"{record.get('AE3', 0):.2f}")
-                    c.drawString(370, y, f"{record.get('AE4', 0):.2f}")
-                    c.drawString(420, y, f"{record.get('Consumption', 0):.2f}")
-                    c.drawString(470, y, f"{record.get('Consumption_Difference', 0):.2f}")
-                    c.drawString(520, y, f"{record.get('RunningTotal', 0):.2f}")
-                else:
-                    cfg = engine_map[engine_type]
-                    inlet = cfg["inlet"]
-                    outlet = cfg["outlet"]
+                    c.drawString(110, y, f"{record.get('ME1', 0):.2f}")
+                    c.drawString(155, y, f"{record.get('ME2', 0):.2f}")
+                    c.drawString(200, y, f"{record.get('AE1', 0):.2f}")
+                    c.drawString(245, y, f"{record.get('AE2', 0):.2f}")
+                    c.drawString(290, y, f"{record.get('AE3', 0):.2f}")
+                    c.drawString(335, y, f"{record.get('AE4', 0):.2f}")
+                    c.drawString(385, y, f"{record.get('TotalConsumption', 0):.2f}")
+                    c.drawString(435, y, f"{record.get('Consumption_Difference', 0):.2f}")
+                    c.drawString(485, y, f"{record.get('RunningTotal', 0):.2f}")
 
-                    c.drawString(110, y, f"{record.get(f'{inlet}_VolumeTotal', 0):.2f}")
-                    c.drawString(160, y, f"{record.get(f'{outlet}_VolumeTotal', 0):.2f}")
-                    c.drawString(210, y, f"{record.get('Consumption', 0):.2f}")
-                    c.drawString(260, y, f"{record.get('Consumption_Difference', 0):.2f}")
-                    c.drawString(310, y, f"{record.get('RunningTotal', 0):.2f}")
-                    c.drawString(360, y, f"{record.get(f'{inlet}_MassFlow', 0):.2f}")
-                    c.drawString(410, y, f"{record.get(f'{outlet}_MassFlow', 0):.2f}")
-                    c.drawString(460, y, f"{record.get(f'{inlet}_Temp', 0):.1f}")
-                    c.drawString(510, y, f"{record.get(f'{outlet}_Temp', 0):.1f}")
-                    c.drawString(560, y, f"{record.get(f'{inlet}_Density', 0):.2f}")
-                    c.drawString(620, y, f"{record.get(f'{outlet}_Density', 0):.2f}")
+                else:
+                    c.drawString(110, y, f"{record.get('Inlet', 0):.2f}")
+                    c.drawString(165, y, f"{record.get('Outlet', 0):.2f}")
+                    c.drawString(220, y, f"{record.get('TotalConsumption', 0):.2f}")
+                    c.drawString(285, y, f"{record.get('Consumption_Difference', 0):.2f}")
+                    c.drawString(335, y, f"{record.get('RunningTotal', 0):.2f}")
+                    c.drawString(395, y, f"{record.get('InletTemp', 0):.2f}")
+                    c.drawString(450, y, f"{record.get('OutletTemp', 0):.2f}")
+                    c.drawString(510, y, f"{record.get('InletDensity', 0):.2f}")
+                    c.drawString(580, y, f"{record.get('OutletDensity', 0):.2f}")
 
             records_per_page = 28
             total_pages = ceil(len(records) / records_per_page)
@@ -1063,15 +1118,24 @@ def download_pdf():
             for page in range(total_pages):
                 if page > 0:
                     c.showPage()
+                    c.setFont("Helvetica-Bold", 16)
+                    c.drawString(50, 550, f"{result['name']} - Detailed Readings")
+
+                    c.setFont("Helvetica", 10)
+                    c.drawString(50, 530, f"From: {start}  To: {end}")
+                    c.drawString(350, 530, f"Interval: {interval.upper()}")
 
                 y = 500
-                c.setFont("Helvetica-Bold", 10)
-                c.drawString(50, 550, f"{result['name']} - Page {page + 1}/{total_pages}")
+
+                c.setFont("Helvetica-Bold", 8)
+                c.drawString(650, 530, f"Page {page + 1}/{total_pages}")
 
                 draw_headers(y)
                 y -= 15
 
-                page_records = records[page * records_per_page:(page + 1) * records_per_page]
+                page_records = records[
+                    page * records_per_page:(page + 1) * records_per_page
+                ]
 
                 for record in page_records:
                     draw_record(record, y)
@@ -1080,7 +1144,11 @@ def download_pdf():
         c.save()
         buffer.seek(0)
 
-        filename = f"{engine_type}_{interval}_{start.replace(' ', '_')}_to_{end.replace(' ', '_')}.pdf"
+        filename = (
+            f"{engine_type}_{interval}_"
+            f"{start.replace(' ', '_').replace(':', '-')}_to_"
+            f"{end.replace(' ', '_').replace(':', '-')}.pdf"
+        )
 
         return send_file(
             buffer,
