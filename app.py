@@ -1062,15 +1062,14 @@ def download_pdf():
                         ("AE3", 290),
                         ("AE4", 335),
                         ("Total", 385),
-                        ("Diff", 435),
                         ("Running", 485),
                     ]
                 else:
                     headers = [
                         ("Time", 50),
-                        ("Inlet", 110),
-                        ("Outlet", 165),
-                        ("Total Cons.", 220),
+                        ("InletVol", 110),
+                        ("OutletVol", 165),
+                        ("Total Consumption", 220),
                         ("Running", 335),
                         ("In Temp", 395),
                         ("Out Temp", 450),
@@ -1100,8 +1099,8 @@ def download_pdf():
                     c.drawString(485, y, f"{record.get('RunningTotal', 0):.2f}")
 
                 else:
-                    c.drawString(110, y, f"{record.get('Inlet', 0):.2f}")
-                    c.drawString(165, y, f"{record.get('Outlet', 0):.2f}")
+                    c.drawString(110, y, f"{record.get('InletVol', 0):.2f}")
+                    c.drawString(165, y, f"{record.get('OutletVol', 0):.2f}")
                     c.drawString(220, y, f"{record.get('TotalConsumption', 0):.2f}")
                     c.drawString(335, y, f"{record.get('RunningTotal', 0):.2f}")
                     c.drawString(395, y, f"{record.get('InletTemp', 0):.2f}")
