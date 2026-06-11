@@ -1099,8 +1099,8 @@ def download_pdf():
                     c.drawString(485, y, f"{record.get('RunningTotal', 0):.2f}")
 
                 else:
-                    c.drawString(110, y, f"{record.get('InletVol', 0):.2f}")
-                    c.drawString(165, y, f"{record.get('OutletVol', 0):.2f}")
+                    c.drawString(110, y, f"{record.get('Inlet', 0):.2f}")
+                    c.drawString(165, y, f"{record.get('Outlet', 0):.2f}")
                     c.drawString(220, y, f"{record.get('TotalConsumption', 0):.2f}")
                     c.drawString(335, y, f"{record.get('RunningTotal', 0):.2f}")
                     c.drawString(395, y, f"{record.get('InletTemp', 0):.2f}")
