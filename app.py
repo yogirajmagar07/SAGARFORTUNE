@@ -570,7 +570,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "name": "PME Main Engine (P)",
             "inlet_col": "FT1Volumetotal",
             "outlet_col": "FT2Volumetotal",
-            "total_col": "ME1VolumeTotal",
+            "total_col": "ME1Volumetotal",
             "inlet_temp_col": "FT1Temp",
             "outlet_temp_col": "FT2Temp",
             "inlet_density_col": "FT1Density",
@@ -581,7 +581,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "name": "SME Main Engine (S)",
             "inlet_col": "FT3Volumetotal",
             "outlet_col": "FT4Volumetotal",
-            "total_col": "ME2VolumeTotal",
+            "total_col": "ME2Volumetotal",
             "inlet_temp_col": "FT3Temp",
             "outlet_temp_col": "FT4Temp",
             "inlet_density_col": "FT3Density",
@@ -592,7 +592,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "name": "AE1 Auxiliary Engine 1",
             "inlet_col": "FT5Volumetotal",
             "outlet_col": "FT6Volumetotal",
-            "total_col": "AE1VolumeTotal",
+            "total_col": "AE1Volumetotal",
             "inlet_temp_col": "FT5Temp",
             "outlet_temp_col": "FT6Temp",
             "inlet_density_col": "FT5Density",
@@ -603,7 +603,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "name": "AE2 Auxiliary Engine 2",
             "inlet_col": "FT7Volumetotal",
             "outlet_col": "FT8Volumetotal",
-            "total_col": "AE2VolumeTotal",
+            "total_col": "AE2Volumetotal",
             "inlet_temp_col": "FT7Temp",
             "outlet_temp_col": "FT8Temp",
             "inlet_density_col": "FT7Density",
@@ -614,7 +614,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "name": "AE3 Auxiliary Engine 3",
             "inlet_col": "FT9Volumetotal",
             "outlet_col": "FT10Volumetotal",
-            "total_col": "AE3VolumeTotal",
+            "total_col": "AE3Volumetotal",
             "inlet_temp_col": "FT9Temp",
             "outlet_temp_col": "FT10Temp",
             "inlet_density_col": "FT9Density",
@@ -625,7 +625,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "name": "AE4 Auxiliary Engine 4",
             "inlet_col": "FT11Volumetotal",
             "outlet_col": "FT12Volumetotal",
-            "total_col": "AE4VolumeTotal",
+            "total_col": "AE4Volumetotal",
             "inlet_temp_col": "FT11Temp",
             "outlet_temp_col": "FT12Temp",
             "inlet_density_col": "FT11Density",
@@ -706,12 +706,12 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
         interval_key = get_interval_key(ts_dt, ts)
 
         if engine_type == "TOTAL":
-            me1 = get_float(e, "ME1VolumeTotal")
-            me2 = get_float(e, "ME2VolumeTotal")
-            ae1 = get_float(e, "AE1VolumeTotal")
-            ae2 = get_float(e, "AE2VolumeTotal")
-            ae3 = get_float(e, "AE3VolumeTotal")
-            ae4 = get_float(e, "AE4VolumeTotal")
+            me1 = get_float(e, "ME1Volumetotal")
+            me2 = get_float(e, "ME2Volumetotal")
+            ae1 = get_float(e, "AE1Volumetotal")
+            ae2 = get_float(e, "AE2Volumetotal")
+            ae3 = get_float(e, "AE3Volumetotal")
+            ae4 = get_float(e, "AE4Volumetotal")
 
             total_consumption = me1 + me2 + ae1 + ae2 + ae3 + ae4
 
