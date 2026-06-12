@@ -154,9 +154,134 @@ def latest():
 # =========================
 # Fuel Consumption API
 # =========================
+# @app.route("/API")
+# def api_readings():
+
+#     from_time = request.args.get("fromTime")
+#     to_time = request.args.get("toTime")
+#     deviceid = "susanad"
+
+#     if not from_time or not to_time:
+#         return jsonify({"error": "fromTime and toTime required"}), 400
+
+#     try:
+#         start_dt = datetime.strptime(from_time, "%Y-%m-%d %H:%M:%S")
+#         end_dt = datetime.strptime(to_time, "%Y-%m-%d %H:%M:%S")
+#     except:
+#         return jsonify({"error": "Invalid datetime format"}), 400
+
+#     readings = []
+
+#     try:
+
+#         # Azure optimized query
+#         query = (
+#             f"PartitionKey eq '{deviceid}' "
+#             f"and TimestampIST ge '{from_time}' "
+#             f"and TimestampIST le '{to_time}'"
+#         )
+
+#         entities = list(table_client.query_entities(query))
+
+#         current_start = start_dt
+
+#         while current_start < end_dt:
+
+#             current_end = min(current_start + timedelta(hours=1), end_dt)
+
+#             # Initialize totals for all meters
+#             total_ft1 = 0  # PME INLET - Main Engine 1 Inlet
+#             total_ft2 = 0  # PME OUTLET - Main Engine 1 Outlet
+#             total_ft3 = 0  # SME INLET - Main Engine 2 Inlet
+#             total_ft4 = 0  # SME OUTLET - Main Engine 2 Outlet
+#             total_ft5 = 0  # PAE INLET - Generator 1 Inlet
+#             total_ft6 = 0  # PAE OUTLET - Generator 1 Outlet
+#             total_ft7 = 0  # SAE INLET - Generator 2 Inlet
+#             total_ft8 = 0  # SAE OUTLET - Generator 2 Outlet
+#             total_ft9 = 0  # BUNKER FLOW (if needed)
+
+#             for e in entities:
+
+#                 ts = e.get("TimestampIST")
+#                 if not ts:
+#                     continue
+
+#                 try:
+#                     ts_dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
+#                 except:
+#                     continue
+
+#                 if current_start <= ts_dt < current_end:
+
+#                     # Accumulate values for each meter
+#                     total_ft1 += float(e.get("FT1Masstotal") or 0)
+#                     total_ft2 += float(e.get("FT2Masstotal") or 0)
+#                     total_ft3 += float(e.get("FT3Masstotal") or 0)
+#                     total_ft4 += float(e.get("FT4Masstotal") or 0)
+#                     total_ft5 += float(e.get("FT5Masstotal") or 0)
+#                     total_ft6 += float(e.get("FT6Masstotal") or 0)
+#                     total_ft7 += float(e.get("FT7Masstotal") or 0)
+#                     total_ft8 += float(e.get("FT8Masstotal") or 0)
+#                     total_ft9 += float(e.get("FT9Masstotal") or 0)
+
+#             # Calculate engine and generator totals
+#             # Main Engine 1: FT1 (Inlet) + FT2 (Outlet)
+#             main_engine_1_total = total_ft1 - total_ft2
+            
+#             # Main Engine 2: FT3 (Inlet) + FT4 (Outlet)
+#             main_engine_2_total = total_ft3 - total_ft4
+            
+#             # Generator 1: FT5 (Inlet) + FT6 (Outlet)
+#             generator_1_total = total_ft5 - total_ft6
+            
+#             # Generator 2: FT7 (Inlet) + FT8 (Outlet)
+#             generator_2_total = total_ft7 - total_ft8
+            
+#             # Total all engines and generators
+#             total_main_engines = main_engine_1_total + main_engine_2_total
+#             total_generators = generator_1_total + generator_2_total
+
+#             readings.append({
+#                 "measurementStartTime": current_start.strftime("%Y-%m-%dT%H:%M:%SZ"),
+#                 "measurementEndTime": (current_end - timedelta(seconds=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+#                 "kind": "VESSEL",
+#                 "mmsi": "419001287",
+#                 "imo": "9458327",
+#                 "consumption": {
+#                     "mainEnginesTotal": round(total_main_engines, 8),
+#                     "generatorsTotal": round(total_generators, 8),
+#                     "mainEngines": [
+#                         {
+#                             "name": "Main Engine 1 ",
+#                             "value": round(main_engine_1_total, 8)
+#                         },
+#                         {
+#                             "name": "Main Engine 2 ",
+#                             "value": round(main_engine_2_total, 8)
+#                         }
+#                     ],
+#                     "generators": [
+#                         {
+#                             "name": "Generator 1 ",
+#                             "value": round(generator_1_total, 8)
+#                         },
+#                         {
+#                             "name": "Generator 2 ",
+#                             "value": round(generator_2_total, 8)
+#                         }
+#                     ]
+#                 }
+#             })
+
+#             current_start = current_end
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+#     return Response(json.dumps({"readings": readings}, indent=4), mimetype="application/json")
+
 @app.route("/API")
 def api_readings():
-
     from_time = request.args.get("fromTime")
     to_time = request.args.get("toTime")
     deviceid = "susanad"
@@ -167,14 +292,54 @@ def api_readings():
     try:
         start_dt = datetime.strptime(from_time, "%Y-%m-%d %H:%M:%S")
         end_dt = datetime.strptime(to_time, "%Y-%m-%d %H:%M:%S")
-    except:
-        return jsonify({"error": "Invalid datetime format"}), 400
+    except Exception:
+        return jsonify({"error": "Invalid datetime format. Use YYYY-MM-DD HH:MM:SS"}), 400
+
+    engine_config = {
+        "PME": {
+            "name": "Main Engine 1",
+            "total_col": "ME1VolumeTotal",
+            "inlet_col": "FT1Volumetotal",
+            "outlet_col": "FT2Volumetotal"
+        },
+        "SME": {
+            "name": "Main Engine 2",
+            "total_col": "ME2VolumeTotal",
+            "inlet_col": "FT3Volumetotal",
+            "outlet_col": "FT4Volumetotal"
+        },
+        "AE1": {
+            "name": "Generator 1",
+            "total_col": "AE1VolumeTotal",
+            "inlet_col": "FT5Volumetotal",
+            "outlet_col": "FT6Volumetotal"
+        },
+        "AE2": {
+            "name": "Generator 2",
+            "total_col": "AE2VolumeTotal",
+            "inlet_col": "FT7Volumetotal",
+            "outlet_col": "FT8Volumetotal"
+        },
+        "AE3": {
+            "name": "Generator 3",
+            "total_col": "AE3VolumeTotal",
+            "inlet_col": "FT9Volumetotal",
+            "outlet_col": "FT10Volumetotal"
+        },
+        "AE4": {
+            "name": "Generator 4",
+            "total_col": "AE4VolumeTotal",
+            "inlet_col": "FT11Volumetotal",
+            "outlet_col": "FT12Volumetotal"
+        }
+    }
+
+    def get_float(row, key):
+        return float(row.get(key, 0) or 0)
 
     readings = []
 
     try:
-
-        # Azure optimized query
         query = (
             f"PartitionKey eq '{deviceid}' "
             f"and TimestampIST ge '{from_time}' "
@@ -186,60 +351,54 @@ def api_readings():
         current_start = start_dt
 
         while current_start < end_dt:
-
             current_end = min(current_start + timedelta(hours=1), end_dt)
 
-            # Initialize totals for all meters
-            total_ft1 = 0  # PME INLET - Main Engine 1 Inlet
-            total_ft2 = 0  # PME OUTLET - Main Engine 1 Outlet
-            total_ft3 = 0  # SME INLET - Main Engine 2 Inlet
-            total_ft4 = 0  # SME OUTLET - Main Engine 2 Outlet
-            total_ft5 = 0  # PAE INLET - Generator 1 Inlet
-            total_ft6 = 0  # PAE OUTLET - Generator 1 Outlet
-            total_ft7 = 0  # SAE INLET - Generator 2 Inlet
-            total_ft8 = 0  # SAE OUTLET - Generator 2 Outlet
-            total_ft9 = 0  # BUNKER FLOW (if needed)
+            totals = {
+                "PME": 0,
+                "SME": 0,
+                "AE1": 0,
+                "AE2": 0,
+                "AE3": 0,
+                "AE4": 0
+            }
 
             for e in entities:
-
                 ts = e.get("TimestampIST")
                 if not ts:
                     continue
 
                 try:
                     ts_dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
-                except:
+                except Exception:
                     continue
 
                 if current_start <= ts_dt < current_end:
+                    for engine_key, cfg in engine_config.items():
+                        total_value = get_float(e, cfg["total_col"])
 
-                    # Accumulate values for each meter
-                    total_ft1 += float(e.get("FT1Masstotal") or 0)
-                    total_ft2 += float(e.get("FT2Masstotal") or 0)
-                    total_ft3 += float(e.get("FT3Masstotal") or 0)
-                    total_ft4 += float(e.get("FT4Masstotal") or 0)
-                    total_ft5 += float(e.get("FT5Masstotal") or 0)
-                    total_ft6 += float(e.get("FT6Masstotal") or 0)
-                    total_ft7 += float(e.get("FT7Masstotal") or 0)
-                    total_ft8 += float(e.get("FT8Masstotal") or 0)
-                    total_ft9 += float(e.get("FT9Masstotal") or 0)
+                        # fallback if total column is missing or zero
+                        if total_value == 0:
+                            inlet_value = get_float(e, cfg["inlet_col"])
+                            outlet_value = get_float(e, cfg["outlet_col"])
+                            total_value = inlet_value - outlet_value
 
-            # Calculate engine and generator totals
-            # Main Engine 1: FT1 (Inlet) + FT2 (Outlet)
-            main_engine_1_total = total_ft1 - total_ft2
-            
-            # Main Engine 2: FT3 (Inlet) + FT4 (Outlet)
-            main_engine_2_total = total_ft3 - total_ft4
-            
-            # Generator 1: FT5 (Inlet) + FT6 (Outlet)
-            generator_1_total = total_ft5 - total_ft6
-            
-            # Generator 2: FT7 (Inlet) + FT8 (Outlet)
-            generator_2_total = total_ft7 - total_ft8
-            
-            # Total all engines and generators
+                        totals[engine_key] += total_value
+
+            main_engine_1_total = totals["PME"]
+            main_engine_2_total = totals["SME"]
+
+            generator_1_total = totals["AE1"]
+            generator_2_total = totals["AE2"]
+            generator_3_total = totals["AE3"]
+            generator_4_total = totals["AE4"]
+
             total_main_engines = main_engine_1_total + main_engine_2_total
-            total_generators = generator_1_total + generator_2_total
+            total_generators = (
+                generator_1_total +
+                generator_2_total +
+                generator_3_total +
+                generator_4_total
+            )
 
             readings.append({
                 "measurementStartTime": current_start.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -250,24 +409,33 @@ def api_readings():
                 "consumption": {
                     "mainEnginesTotal": round(total_main_engines, 8),
                     "generatorsTotal": round(total_generators, 8),
+                    "totalConsumption": round(total_main_engines + total_generators, 8),
                     "mainEngines": [
                         {
-                            "name": "Main Engine 1 ",
+                            "name": "Main Engine 1",
                             "value": round(main_engine_1_total, 8)
                         },
                         {
-                            "name": "Main Engine 2 ",
+                            "name": "Main Engine 2",
                             "value": round(main_engine_2_total, 8)
                         }
                     ],
                     "generators": [
                         {
-                            "name": "Generator 1 ",
+                            "name": "Generator 1",
                             "value": round(generator_1_total, 8)
                         },
                         {
-                            "name": "Generator 2 ",
+                            "name": "Generator 2",
                             "value": round(generator_2_total, 8)
+                        },
+                        {
+                            "name": "Generator 3",
+                            "value": round(generator_3_total, 8)
+                        },
+                        {
+                            "name": "Generator 4",
+                            "value": round(generator_4_total, 8)
                         }
                     ]
                 }
@@ -278,7 +446,10 @@ def api_readings():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    return Response(json.dumps({"readings": readings}, indent=4), mimetype="application/json")
+    return Response(
+        json.dumps({"readings": readings}, indent=4),
+        mimetype="application/json"
+    )
 
 
 # New logic
