@@ -1239,10 +1239,7 @@ def download_pdf():
                         ("Time", 50),
                         ("InletVol", 110),
                         ("OutletVol", 165),
-                        ("In Temp", 395),
-                        ("Out Temp", 450),
-                        ("In Density", 510),
-                        ("Out Density", 580),
+                        ("Total Consumption", 220)
                     ]
 
                 for text, x in headers:
@@ -1268,10 +1265,11 @@ def download_pdf():
                 else:
                     c.drawString(110, y, f"{record.get('Inlet', 0):.2f}")
                     c.drawString(165, y, f"{record.get('Outlet', 0):.2f}")
-                    c.drawString(395, y, f"{record.get('InletTemp', 0):.2f}")
-                    c.drawString(450, y, f"{record.get('OutletTemp', 0):.2f}")
-                    c.drawString(510, y, f"{record.get('InletDensity', 0):.2f}")
-                    c.drawString(580, y, f"{record.get('OutletDensity', 0):.2f}")
+                    c.drawString(220, y, f"{record.get('TotalConsumption', 0):.2f}")
+                    # c.drawString(395, y, f"{record.get('InletTemp', 0):.2f}")
+                    # c.drawString(450, y, f"{record.get('OutletTemp', 0):.2f}")
+                    # c.drawString(510, y, f"{record.get('InletDensity', 0):.2f}")
+                    # c.drawString(580, y, f"{record.get('OutletDensity', 0):.2f}")
 
             records_per_page = 28
             total_pages = ceil(len(records) / records_per_page)
