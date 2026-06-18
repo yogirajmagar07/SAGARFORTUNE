@@ -1237,7 +1237,7 @@ def download_pdf():
                 else:
                     headers = [
                         ("Time", 50),
-                        ("InletVol(m³)", 110),
+                        ("InletVol", 110),
                         ("OutletVol(m³)", 165),
                         ("Total Consumption(m³)", 220)
                     ]
@@ -1264,7 +1264,7 @@ def download_pdf():
 
                 else:
                     c.drawString(110, y, f"{record.get('Inlet(m³)', 0):.2f}")
-                    c.drawString(165, y, f"{record.get('Outlet(m³)', 0):.2f}")
+                    c.drawString(165, y, f"{record.get('Outlet', 0):.2f}")
                     c.drawString(220, y, f"{record.get('TotalConsumption(m³)', 0):.2f}")
                     # c.drawString(395, y, f"{record.get('InletTemp', 0):.2f}")
                     # c.drawString(450, y, f"{record.get('OutletTemp', 0):.2f}")
