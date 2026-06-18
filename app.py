@@ -733,307 +733,307 @@ def parse_dt(value):
 #         'interval': interval
 #     }
 
-def fetch_engine_consumption(engine_type, start, end, interval="hour"):
-    deviceid = "susanad"
+# def fetch_engine_consumption(engine_type, start, end, interval="hour"):
+#     deviceid = "susanad"
 
-    engine_config = {
-        "PME": {
-            "name": "PME Main Engine (P)",
-            "inlet_col": "FT1Volumetotal",
-            "outlet_col": "FT2Volumetotal",
-            "total_col": "ME1Volumetotal",
-            "inlet_temp_col": "FT1Temp",
-            "outlet_temp_col": "FT2Temp",
-            "inlet_density_col": "FT1Density",
-            "outlet_density_col": "FT2Density",
-            "formula": "ME1VolumeTotal"
-        },
-        "SME": {
-            "name": "SME Main Engine (S)",
-            "inlet_col": "FT3Volumetotal",
-            "outlet_col": "FT4Volumetotal",
-            "total_col": "ME2Volumetotal",
-            "inlet_temp_col": "FT3Temp",
-            "outlet_temp_col": "FT4Temp",
-            "inlet_density_col": "FT3Density",
-            "outlet_density_col": "FT4Density",
-            "formula": "ME2VolumeTotal"
-        },
-        "AE1": {
-            "name": "AE1 Auxiliary Engine 1",
-            "inlet_col": "FT5Volumetotal",
-            "outlet_col": "FT6Volumetotal",
-            "total_col": "AE1Volumetotal",
-            "inlet_temp_col": "FT5Temp",
-            "outlet_temp_col": "FT6Temp",
-            "inlet_density_col": "FT5Density",
-            "outlet_density_col": "FT6Density",
-            "formula": "AE1VolumeTotal"
-        },
-        "AE2": {
-            "name": "AE2 Auxiliary Engine 2",
-            "inlet_col": "FT7Volumetotal",
-            "outlet_col": "FT8Volumetotal",
-            "total_col": "AE2Volumetotal",
-            "inlet_temp_col": "FT7Temp",
-            "outlet_temp_col": "FT8Temp",
-            "inlet_density_col": "FT7Density",
-            "outlet_density_col": "FT8Density",
-            "formula": "AE2VolumeTotal"
-        },
-        "AE3": {
-            "name": "AE3 Auxiliary Engine 3",
-            "inlet_col": "FT9Volumetotal",
-            "outlet_col": "FT10Volumetotal",
-            "total_col": "AE3Volumetotal",
-            "inlet_temp_col": "FT9Temp",
-            "outlet_temp_col": "FT10Temp",
-            "inlet_density_col": "FT9Density",
-            "outlet_density_col": "FT10Density",
-            "formula": "AE3VolumeTotal"
-        },
-        "AE4": {
-            "name": "AE4 Auxiliary Engine 4",
-            "inlet_col": "FT11Volumetotal",
-            "outlet_col": "FT12Volumetotal",
-            "total_col": "AE4Volumetotal",
-            "inlet_temp_col": "FT11Temp",
-            "outlet_temp_col": "FT12Temp",
-            "inlet_density_col": "FT11Density",
-            "outlet_density_col": "FT12Density",
-            "formula": "AE4VolumeTotal"
-        },
-        "TOTAL": {
-            "name": "TOTAL Consumption",
-            "formula": "ME1 + ME2 + AE1 + AE2 + AE3 + AE4"
-        }
-    }
+#     engine_config = {
+#         "PME": {
+#             "name": "PME Main Engine (P)",
+#             "inlet_col": "FT1Volumetotal",
+#             "outlet_col": "FT2Volumetotal",
+#             "total_col": "ME1Volumetotal",
+#             "inlet_temp_col": "FT1Temp",
+#             "outlet_temp_col": "FT2Temp",
+#             "inlet_density_col": "FT1Density",
+#             "outlet_density_col": "FT2Density",
+#             "formula": "ME1VolumeTotal"
+#         },
+#         "SME": {
+#             "name": "SME Main Engine (S)",
+#             "inlet_col": "FT3Volumetotal",
+#             "outlet_col": "FT4Volumetotal",
+#             "total_col": "ME2Volumetotal",
+#             "inlet_temp_col": "FT3Temp",
+#             "outlet_temp_col": "FT4Temp",
+#             "inlet_density_col": "FT3Density",
+#             "outlet_density_col": "FT4Density",
+#             "formula": "ME2VolumeTotal"
+#         },
+#         "AE1": {
+#             "name": "AE1 Auxiliary Engine 1",
+#             "inlet_col": "FT5Volumetotal",
+#             "outlet_col": "FT6Volumetotal",
+#             "total_col": "AE1Volumetotal",
+#             "inlet_temp_col": "FT5Temp",
+#             "outlet_temp_col": "FT6Temp",
+#             "inlet_density_col": "FT5Density",
+#             "outlet_density_col": "FT6Density",
+#             "formula": "AE1VolumeTotal"
+#         },
+#         "AE2": {
+#             "name": "AE2 Auxiliary Engine 2",
+#             "inlet_col": "FT7Volumetotal",
+#             "outlet_col": "FT8Volumetotal",
+#             "total_col": "AE2Volumetotal",
+#             "inlet_temp_col": "FT7Temp",
+#             "outlet_temp_col": "FT8Temp",
+#             "inlet_density_col": "FT7Density",
+#             "outlet_density_col": "FT8Density",
+#             "formula": "AE2VolumeTotal"
+#         },
+#         "AE3": {
+#             "name": "AE3 Auxiliary Engine 3",
+#             "inlet_col": "FT9Volumetotal",
+#             "outlet_col": "FT10Volumetotal",
+#             "total_col": "AE3Volumetotal",
+#             "inlet_temp_col": "FT9Temp",
+#             "outlet_temp_col": "FT10Temp",
+#             "inlet_density_col": "FT9Density",
+#             "outlet_density_col": "FT10Density",
+#             "formula": "AE3VolumeTotal"
+#         },
+#         "AE4": {
+#             "name": "AE4 Auxiliary Engine 4",
+#             "inlet_col": "FT11Volumetotal",
+#             "outlet_col": "FT12Volumetotal",
+#             "total_col": "AE4Volumetotal",
+#             "inlet_temp_col": "FT11Temp",
+#             "outlet_temp_col": "FT12Temp",
+#             "inlet_density_col": "FT11Density",
+#             "outlet_density_col": "FT12Density",
+#             "formula": "AE4VolumeTotal"
+#         },
+#         "TOTAL": {
+#             "name": "TOTAL Consumption",
+#             "formula": "ME1 + ME2 + AE1 + AE2 + AE3 + AE4"
+#         }
+#     }
 
-    if engine_type not in engine_config:
-        return None
+#     if engine_type not in engine_config:
+#         return None
 
-    config = engine_config[engine_type]
+#     config = engine_config[engine_type]
 
-    try:
-        start_dt = parse_dt(start)
-        end_dt = parse_dt(end)
-    except Exception as e:
-        print(f"Date parsing error: {e}")
-        return None
+#     try:
+#         start_dt = parse_dt(start)
+#         end_dt = parse_dt(end)
+#     except Exception as e:
+#         print(f"Date parsing error: {e}")
+#         return None
 
-    query = f"PartitionKey eq '{deviceid}'"
-    entities = list(table_client.query_entities(query))
+#     query = f"PartitionKey eq '{deviceid}'"
+#     entities = list(table_client.query_entities(query))
 
-    filtered_entities = []
+#     filtered_entities = []
 
-    for e in entities:
-        ts = e.get("TimestampIST")
-        if not ts:
-            continue
+#     for e in entities:
+#         ts = e.get("TimestampIST")
+#         if not ts:
+#             continue
 
-        try:
-            ts_dt = parse_dt(ts)
-            if start_dt <= ts_dt <= end_dt:
-                filtered_entities.append(e)
-        except Exception:
-            continue
+#         try:
+#             ts_dt = parse_dt(ts)
+#             if start_dt <= ts_dt <= end_dt:
+#                 filtered_entities.append(e)
+#         except Exception:
+#             continue
 
-    filtered_entities.sort(key=lambda x: x.get("TimestampIST", ""))
+#     filtered_entities.sort(key=lambda x: x.get("TimestampIST", ""))
 
-    if not filtered_entities:
-        return {
-            "engine_type": engine_type,
-            "name": config["name"],
-            "formula": config["formula"],
-            "records": [],
-            "total_consumption": 0,
-            "avg_consumption": 0,
-            "record_count": 0,
-            "interval": interval
-        }
+#     if not filtered_entities:
+#         return {
+#             "engine_type": engine_type,
+#             "name": config["name"],
+#             "formula": config["formula"],
+#             "records": [],
+#             "total_consumption": 0,
+#             "avg_consumption": 0,
+#             "record_count": 0,
+#             "interval": interval
+#         }
 
-    def get_float(row, key):
-        return float(row.get(key, 0) or 0)
+#     def get_float(row, key):
+#         return float(row.get(key, 0) or 0)
 
-    def get_interval_key(dt, ts):
-        if interval == "minute":
-            return dt.strftime("%Y-%m-%d %H:%M")
-        elif interval == "hour":
-            return dt.strftime("%Y-%m-%d %H:00")
-        elif interval == "daily":
-            return dt.strftime("%Y-%m-%d")
-        elif interval == "monthly":
-            return dt.strftime("%Y-%m")
-        elif interval == "yearly":
-            return dt.strftime("%Y")
-        else:
-            return ts
+#     def get_interval_key(dt, ts):
+#         if interval == "minute":
+#             return dt.strftime("%Y-%m-%d %H:%M")
+#         elif interval == "hour":
+#             return dt.strftime("%Y-%m-%d %H:00")
+#         elif interval == "daily":
+#             return dt.strftime("%Y-%m-%d")
+#         elif interval == "monthly":
+#             return dt.strftime("%Y-%m")
+#         elif interval == "yearly":
+#             return dt.strftime("%Y")
+#         else:
+#             return ts
 
-    raw_records = []
+#     raw_records = []
 
-    for e in filtered_entities:
-        ts = e.get("TimestampIST")
-        ts_dt = parse_dt(ts)
-        interval_key = get_interval_key(ts_dt, ts)
+#     for e in filtered_entities:
+#         ts = e.get("TimestampIST")
+#         ts_dt = parse_dt(ts)
+#         interval_key = get_interval_key(ts_dt, ts)
 
-        if engine_type == "TOTAL":
-            me1 = get_float(e, "ME1Volumetotal")
-            me2 = get_float(e, "ME2Volumetotal")
-            ae1 = get_float(e, "AE1Volumetotal")
-            ae2 = get_float(e, "AE2Volumetotal")
-            ae3 = get_float(e, "AE3Volumetotal")
-            ae4 = get_float(e, "AE4Volumetotal")
+#         if engine_type == "TOTAL":
+#             me1 = get_float(e, "ME1Volumetotal")
+#             me2 = get_float(e, "ME2Volumetotal")
+#             ae1 = get_float(e, "AE1Volumetotal")
+#             ae2 = get_float(e, "AE2Volumetotal")
+#             ae3 = get_float(e, "AE3Volumetotal")
+#             ae4 = get_float(e, "AE4Volumetotal")
 
-            total_consumption = me1 + me2 + ae1 + ae2 + ae3 + ae4
+#             total_consumption = me1 + me2 + ae1 + ae2 + ae3 + ae4
 
-            record = {
-                "Timestamp": ts,
-                "Interval": interval_key,
-                "EngineType": engine_type,
-                "EngineName": config["name"],
+#             record = {
+#                 "Timestamp": ts,
+#                 "Interval": interval_key,
+#                 "EngineType": engine_type,
+#                 "EngineName": config["name"],
 
-                "ME1": round(me1, 5),
-                "ME2": round(me2, 5),
-                "AE1": round(ae1, 5),
-                "AE2": round(ae2, 5),
-                "AE3": round(ae3, 5),
-                "AE4": round(ae4, 5),
+#                 "ME1": round(me1, 5),
+#                 "ME2": round(me2, 5),
+#                 "AE1": round(ae1, 5),
+#                 "AE2": round(ae2, 5),
+#                 "AE3": round(ae3, 5),
+#                 "AE4": round(ae4, 5),
 
-                "Inlet": 0,
-                "Outlet": 0,
-                "TotalConsumption": round(total_consumption, 5),
-                "InletTemp": 0,
-                "OutletTemp": 0,
-                "InletDensity": 0,
-                "OutletDensity": 0,
+#                 "Inlet": 0,
+#                 "Outlet": 0,
+#                 "TotalConsumption": round(total_consumption, 5),
+#                 "InletTemp": 0,
+#                 "OutletTemp": 0,
+#                 "InletDensity": 0,
+#                 "OutletDensity": 0,
 
-                "Consumption": round(total_consumption, 5)
-            }
+#                 "Consumption": round(total_consumption, 5)
+#             }
 
-        else:
-            inlet_value = get_float(e, config["inlet_col"])
-            outlet_value = get_float(e, config["outlet_col"])
-            total_consumption = get_float(e, config["total_col"])
+#         else:
+#             inlet_value = get_float(e, config["inlet_col"])
+#             outlet_value = get_float(e, config["outlet_col"])
+#             total_consumption = get_float(e, config["total_col"])
 
-            record = {
-                "Timestamp": ts,
-                "Interval": interval_key,
-                "EngineType": engine_type,
-                "EngineName": config["name"],
+#             record = {
+#                 "Timestamp": ts,
+#                 "Interval": interval_key,
+#                 "EngineType": engine_type,
+#                 "EngineName": config["name"],
 
-                "Inlet": round(inlet_value, 5),
-                "Outlet": round(outlet_value, 5),
-                "TotalConsumption": round(total_consumption, 5),
+#                 "Inlet": round(inlet_value, 5),
+#                 "Outlet": round(outlet_value, 5),
+#                 "TotalConsumption": round(total_consumption, 5),
 
-                "InletTemp": round(get_float(e, config["inlet_temp_col"]), 2),
-                "OutletTemp": round(get_float(e, config["outlet_temp_col"]), 2),
+#                 "InletTemp": round(get_float(e, config["inlet_temp_col"]), 2),
+#                 "OutletTemp": round(get_float(e, config["outlet_temp_col"]), 2),
 
-                "InletDensity": round(get_float(e, config["inlet_density_col"]), 2),
-                "OutletDensity": round(get_float(e, config["outlet_density_col"]), 2),
+#                 "InletDensity": round(get_float(e, config["inlet_density_col"]), 2),
+#                 "OutletDensity": round(get_float(e, config["outlet_density_col"]), 2),
 
-                "Consumption": round(total_consumption, 5)
-            }
+#                 "Consumption": round(total_consumption, 5)
+#             }
 
-        raw_records.append(record)
+#         raw_records.append(record)
 
-    if interval == "raw":
-        records = raw_records
-    else:
-        grouped = {}
+#     if interval == "raw":
+#         records = raw_records
+#     else:
+#         grouped = {}
 
-        for r in raw_records:
-            key = r["Interval"]
+#         for r in raw_records:
+#             key = r["Interval"]
 
-            if key not in grouped:
-                grouped[key] = {
-                    "Timestamp": r["Timestamp"],
-                    "Interval": key,
-                    "EngineType": engine_type,
-                    "EngineName": config["name"],
-                    "RecordCount": 0,
+#             if key not in grouped:
+#                 grouped[key] = {
+#                     "Timestamp": r["Timestamp"],
+#                     "Interval": key,
+#                     "EngineType": engine_type,
+#                     "EngineName": config["name"],
+#                     "RecordCount": 0,
 
-                    "Inlet": 0,
-                    "Outlet": 0,
-                    "TotalConsumption": 0,
-                    "InletTemp": 0,
-                    "OutletTemp": 0,
-                    "InletDensity": 0,
-                    "OutletDensity": 0,
+#                     "Inlet": 0,
+#                     "Outlet": 0,
+#                     "TotalConsumption": 0,
+#                     "InletTemp": 0,
+#                     "OutletTemp": 0,
+#                     "InletDensity": 0,
+#                     "OutletDensity": 0,
 
-                    "Consumption": 0
-                }
+#                     "Consumption": 0
+#                 }
 
-                if engine_type == "TOTAL":
-                    grouped[key]["ME1"] = 0
-                    grouped[key]["ME2"] = 0
-                    grouped[key]["AE1"] = 0
-                    grouped[key]["AE2"] = 0
-                    grouped[key]["AE3"] = 0
-                    grouped[key]["AE4"] = 0
+#                 if engine_type == "TOTAL":
+#                     grouped[key]["ME1"] = 0
+#                     grouped[key]["ME2"] = 0
+#                     grouped[key]["AE1"] = 0
+#                     grouped[key]["AE2"] = 0
+#                     grouped[key]["AE3"] = 0
+#                     grouped[key]["AE4"] = 0
 
-            grouped[key]["RecordCount"] += 1
+#             grouped[key]["RecordCount"] += 1
 
-            grouped[key]["Inlet"] += r.get("Inlet", 0)
-            grouped[key]["Outlet"] += r.get("Outlet", 0)
-            grouped[key]["TotalConsumption"] += r.get("TotalConsumption", 0)
-            grouped[key]["InletTemp"] += r.get("InletTemp", 0)
-            grouped[key]["OutletTemp"] += r.get("OutletTemp", 0)
-            grouped[key]["InletDensity"] += r.get("InletDensity", 0)
-            grouped[key]["OutletDensity"] += r.get("OutletDensity", 0)
-            grouped[key]["Consumption"] += r.get("Consumption", 0)
+#             grouped[key]["Inlet"] += r.get("Inlet", 0)
+#             grouped[key]["Outlet"] += r.get("Outlet", 0)
+#             grouped[key]["TotalConsumption"] += r.get("TotalConsumption", 0)
+#             grouped[key]["InletTemp"] += r.get("InletTemp", 0)
+#             grouped[key]["OutletTemp"] += r.get("OutletTemp", 0)
+#             grouped[key]["InletDensity"] += r.get("InletDensity", 0)
+#             grouped[key]["OutletDensity"] += r.get("OutletDensity", 0)
+#             grouped[key]["Consumption"] += r.get("Consumption", 0)
 
-            if engine_type == "TOTAL":
-                grouped[key]["ME1"] += r.get("ME1", 0)
-                grouped[key]["ME2"] += r.get("ME2", 0)
-                grouped[key]["AE1"] += r.get("AE1", 0)
-                grouped[key]["AE2"] += r.get("AE2", 0)
-                grouped[key]["AE3"] += r.get("AE3", 0)
-                grouped[key]["AE4"] += r.get("AE4", 0)
+#             if engine_type == "TOTAL":
+#                 grouped[key]["ME1"] += r.get("ME1", 0)
+#                 grouped[key]["ME2"] += r.get("ME2", 0)
+#                 grouped[key]["AE1"] += r.get("AE1", 0)
+#                 grouped[key]["AE2"] += r.get("AE2", 0)
+#                 grouped[key]["AE3"] += r.get("AE3", 0)
+#                 grouped[key]["AE4"] += r.get("AE4", 0)
 
-        records = []
+#         records = []
 
-        for key, g in grouped.items():
-            count = g["RecordCount"]
+#         for key, g in grouped.items():
+#             count = g["RecordCount"]
 
-            if engine_type == "TOTAL":
-                g["ME1"] = round(g["ME1"], 5)
-                g["ME2"] = round(g["ME2"], 5)
-                g["AE1"] = round(g["AE1"], 5)
-                g["AE2"] = round(g["AE2"], 5)
-                g["AE3"] = round(g["AE3"], 5)
-                g["AE4"] = round(g["AE4"], 5)
+#             if engine_type == "TOTAL":
+#                 g["ME1"] = round(g["ME1"], 5)
+#                 g["ME2"] = round(g["ME2"], 5)
+#                 g["AE1"] = round(g["AE1"], 5)
+#                 g["AE2"] = round(g["AE2"], 5)
+#                 g["AE3"] = round(g["AE3"], 5)
+#                 g["AE4"] = round(g["AE4"], 5)
 
-                g["TotalConsumption"] = round(g["TotalConsumption"], 5)
-                g["Consumption"] = round(g["Consumption"], 5)
-            else:
-                g["Inlet"] = round(g["Inlet"], 5)
-                g["Outlet"] = round(g["Outlet"], 5)
-                g["TotalConsumption"] = round(g["TotalConsumption"], 5)
+#                 g["TotalConsumption"] = round(g["TotalConsumption"], 5)
+#                 g["Consumption"] = round(g["Consumption"], 5)
+#             else:
+#                 g["Inlet"] = round(g["Inlet"], 5)
+#                 g["Outlet"] = round(g["Outlet"], 5)
+#                 g["TotalConsumption"] = round(g["TotalConsumption"], 5)
 
-                g["InletTemp"] = round(g["InletTemp"] / count, 2)
-                g["OutletTemp"] = round(g["OutletTemp"] / count, 2)
-                g["InletDensity"] = round(g["InletDensity"] / count, 2)
-                g["OutletDensity"] = round(g["OutletDensity"] / count, 2)
+#                 g["InletTemp"] = round(g["InletTemp"] / count, 2)
+#                 g["OutletTemp"] = round(g["OutletTemp"] / count, 2)
+#                 g["InletDensity"] = round(g["InletDensity"] / count, 2)
+#                 g["OutletDensity"] = round(g["OutletDensity"] / count, 2)
 
-                g["Consumption"] = round(g["TotalConsumption"], 5)
+#                 g["Consumption"] = round(g["TotalConsumption"], 5)
 
-            records.append(g)
+#             records.append(g)
 
-        records.sort(key=lambda x: x["Timestamp"])
+#         records.sort(key=lambda x: x["Timestamp"])
 
-    total_consumption = sum(r.get("Consumption", 0) for r in records)
-    avg_consumption = total_consumption / len(records) if records else 0
+#     total_consumption = sum(r.get("Consumption", 0) for r in records)
+#     avg_consumption = total_consumption / len(records) if records else 0
 
-    return {
-        "engine_type": engine_type,
-        "name": config["name"],
-        "formula": config["formula"],
-        "records": records,
-        "total_consumption": round(total_consumption, 5),
-        "avg_consumption": round(avg_consumption, 5),
-        "record_count": len(records),
-        "interval": interval
-    }
+#     return {
+#         "engine_type": engine_type,
+#         "name": config["name"],
+#         "formula": config["formula"],
+#         "records": records,
+#         "total_consumption": round(total_consumption, 5),
+#         "avg_consumption": round(avg_consumption, 5),
+#         "record_count": len(records),
+#         "interval": interval
+#     }
 
 @app.route("/download_csv")
 @login_required
@@ -1129,196 +1129,196 @@ def download_csv():
         print(f"CSV download error: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/download_pdf")
-@login_required
-def download_pdf():
-    try:
-        from reportlab.lib.pagesizes import letter, landscape
-        from reportlab.pdfgen import canvas
-        from math import ceil
+# @app.route("/download_pdf")
+# @login_required
+# def download_pdf():
+#     try:
+#         from reportlab.lib.pagesizes import letter, landscape
+#         from reportlab.pdfgen import canvas
+#         from math import ceil
 
-        # Get parameters
-        engine_type = request.args.get("type", "PME")
-        start = request.args.get("start", "").replace("T", " ")
-        end = request.args.get("end", "").replace("T", " ")
-        interval = request.args.get("interval", "hour")
+#         # Get parameters
+#         engine_type = request.args.get("type", "PME")
+#         start = request.args.get("start", "").replace("T", " ")
+#         end = request.args.get("end", "").replace("T", " ")
+#         interval = request.args.get("interval", "hour")
 
-        if not start or not end:
-            return jsonify({"error": "Start and end time required"}), 400
+#         if not start or not end:
+#             return jsonify({"error": "Start and end time required"}), 400
 
-        # Fetch updated report data
-        result = fetch_engine_consumption(engine_type, start, end, interval)
+#         # Fetch updated report data
+#         result = fetch_engine_consumption(engine_type, start, end, interval)
 
-        if not result:
-            return jsonify({"error": "Invalid engine type"}), 400
+#         if not result:
+#             return jsonify({"error": "Invalid engine type"}), 400
 
-        records = sorted(result["records"], key=lambda x: x.get("Timestamp", ""))
+#         records = sorted(result["records"], key=lambda x: x.get("Timestamp", ""))
 
-        # Add running total and difference
-        running_total = 0
-        prev_consumption = None
+#         # Add running total and difference
+#         running_total = 0
+#         prev_consumption = None
 
-        for record in records:
-            current_consumption = float(record.get("Consumption", 0) or 0)
+#         for record in records:
+#             current_consumption = float(record.get("Consumption", 0) or 0)
 
-            running_total += current_consumption
-            record["RunningTotal"] = round(running_total, 5)
+#             running_total += current_consumption
+#             record["RunningTotal"] = round(running_total, 5)
 
-            if prev_consumption is None:
-                record["Consumption_Difference"] = 0
-            else:
-                record["Consumption_Difference"] = round(
-                    current_consumption - prev_consumption, 5
-                )
+#             if prev_consumption is None:
+#                 record["Consumption_Difference"] = 0
+#             else:
+#                 record["Consumption_Difference"] = round(
+#                     current_consumption - prev_consumption, 5
+#                 )
 
-            prev_consumption = current_consumption
+#             prev_consumption = current_consumption
 
-        # Create PDF
-        buffer = BytesIO()
-        c = canvas.Canvas(buffer, pagesize=landscape(letter))
+#         # Create PDF
+#         buffer = BytesIO()
+#         c = canvas.Canvas(buffer, pagesize=landscape(letter))
 
-        # =====================
-        # Title / Summary Page
-        # =====================
-        c.setFont("Helvetica-Bold", 20)
-        c.drawString(50, 550, f"{result['name']} Report")
+#         # =====================
+#         # Title / Summary Page
+#         # =====================
+#         c.setFont("Helvetica-Bold", 20)
+#         c.drawString(50, 550, f"{result['name']} Report")
 
-        c.setFont("Helvetica", 12)
-        c.drawString(50, 520, f"From: {start}")
-        c.drawString(350, 520, f"To: {end}")
-        c.drawString(50, 500, f"Interval: {interval.upper()}")
-        c.drawString(350, 500, f"Formula: {result['formula']}")
+#         c.setFont("Helvetica", 12)
+#         c.drawString(50, 520, f"From: {start}")
+#         c.drawString(350, 520, f"To: {end}")
+#         c.drawString(50, 500, f"Interval: {interval.upper()}")
+#         c.drawString(350, 500, f"Formula: {result['formula']}")
 
-        c.setFont("Helvetica-Bold", 14)
-        c.drawString(50, 450, "Summary Statistics")
+#         c.setFont("Helvetica-Bold", 14)
+#         c.drawString(50, 450, "Summary Statistics")
 
-        c.setFont("Helvetica", 12)
-        c.drawString(50, 420, f"Total Records: {result['record_count']}")
-        c.drawString(50, 400, f"Total Consumption: {result['total_consumption']} m³")
-        c.drawString(50, 380, f"Average Consumption: {result['avg_consumption']} m³")
+#         c.setFont("Helvetica", 12)
+#         c.drawString(50, 420, f"Total Records: {result['record_count']}")
+#         c.drawString(50, 400, f"Total Consumption: {result['total_consumption']}")
+#         c.drawString(50, 380, f"Average Consumption: {result['avg_consumption']}")
 
-        if records:
-            c.drawString(50, 350, f"First Reading Time: {records[0].get('Timestamp', '')}")
-            c.drawString(50, 330, f"Last Reading Time: {records[-1].get('Timestamp', '')}")
+#         if records:
+#             c.drawString(50, 350, f"First Reading Time: {records[0].get('Timestamp', '')}")
+#             c.drawString(50, 330, f"Last Reading Time: {records[-1].get('Timestamp', '')}")
 
-        c.line(50, 300, 750, 300)
+#         c.line(50, 300, 750, 300)
 
-        # =====================
-        # Detailed Data Page
-        # =====================
-        c.showPage()
+#         # =====================
+#         # Detailed Data Page
+#         # =====================
+#         c.showPage()
 
-        c.setFont("Helvetica-Bold", 16)
-        c.drawString(50, 550, f"{result['name']} - Detailed Readings")
+#         c.setFont("Helvetica-Bold", 16)
+#         c.drawString(50, 550, f"{result['name']} - Detailed Readings")
 
-        c.setFont("Helvetica", 10)
-        c.drawString(50, 530, f"From: {start}  To: {end}")
-        c.drawString(350, 530, f"Interval: {interval.upper()}")
+#         c.setFont("Helvetica", 10)
+#         c.drawString(50, 530, f"From: {start}  To: {end}")
+#         c.drawString(350, 530, f"Interval: {interval.upper()}")
 
-        if not records:
-            c.setFont("Helvetica", 12)
-            c.drawString(50, 450, "No data found for selected date range")
+#         if not records:
+#             c.setFont("Helvetica", 12)
+#             c.drawString(50, 450, "No data found for selected date range")
 
-        else:
-            def draw_headers(y):
-                c.setFont("Helvetica-Bold", 6)
+#         else:
+#             def draw_headers(y):
+#                 c.setFont("Helvetica-Bold", 6)
 
-                if engine_type == "TOTAL":
-                    headers = [
-                        ("Time", 50),
-                        ("ME1", 110),
-                        ("ME2", 155),
-                        ("AE1", 200),
-                        ("AE2", 245),
-                        ("AE3", 290),
-                        ("AE4", 335),
-                        ("Total", 385)
-                    ]
-                else:
-                    headers = [
-                        ("Time", 50),
-                        ("InletVol(m³)", 110),
-                        ("OutletVol(m³)", 165),
-                        ("Total Consumption(m³)", 220)
-                    ]
+#                 if engine_type == "TOTAL":
+#                     headers = [
+#                         ("Time", 50),
+#                         ("ME1(m³)", 110),
+#                         ("ME2(m³)", 155),
+#                         ("AE1(m³)", 200),
+#                         ("AE2(m³)", 245),
+#                         ("AE3(m³)", 290),
+#                         ("AE4(m³)", 335),
+#                         ("Total(m³)", 385)
+#                     ]
+#                 else:
+#                     headers = [
+#                         ("Time", 50),
+#                         ("InletVol(m³)", 110),
+#                         ("OutletVol(m³)", 165),
+#                         ("Total Consumption(m³)", 220)
+#                     ]
 
-                for text, x in headers:
-                    c.drawString(x, y, text)
+#                 for text, x in headers:
+#                     c.drawString(x, y, text)
 
-            def draw_record(record, y):
-                c.setFont("Helvetica", 5.5)
+#             def draw_record(record, y):
+#                 c.setFont("Helvetica", 5.5)
 
-                timestamp = str(record.get("Timestamp", ""))
-                short_time = timestamp[5:16] if len(timestamp) >= 16 else timestamp
+#                 timestamp = str(record.get("Timestamp", ""))
+#                 short_time = timestamp[5:16] if len(timestamp) >= 16 else timestamp
 
-                c.drawString(50, y, short_time)
+#                 c.drawString(50, y, short_time)
 
-                if engine_type == "TOTAL":
-                    c.drawString(110, y, f"{record.get('ME1', 0):.2f}")
-                    c.drawString(155, y, f"{record.get('ME2', 0):.2f}")
-                    c.drawString(200, y, f"{record.get('AE1', 0):.2f}")
-                    c.drawString(245, y, f"{record.get('AE2', 0):.2f}")
-                    c.drawString(290, y, f"{record.get('AE3', 0):.2f}")
-                    c.drawString(335, y, f"{record.get('AE4', 0):.2f}")
-                    c.drawString(385, y, f"{record.get('TotalConsumption', 0):.2f}")
+#                 if engine_type == "TOTAL":
+#                     c.drawString(110, y, f"{record.get('ME1', 0):.2f}")
+#                     c.drawString(155, y, f"{record.get('ME2', 0):.2f}")
+#                     c.drawString(200, y, f"{record.get('AE1', 0):.2f}")
+#                     c.drawString(245, y, f"{record.get('AE2', 0):.2f}")
+#                     c.drawString(290, y, f"{record.get('AE3', 0):.2f}")
+#                     c.drawString(335, y, f"{record.get('AE4', 0):.2f}")
+#                     c.drawString(385, y, f"{record.get('TotalConsumption', 0):.2f}")
 
-                else:
-                    c.drawString(110, y, f"{record.get('Inlet', 0):.2f}")
-                    c.drawString(165, y, f"{record.get('Outlet', 0):.2f}")
-                    c.drawString(220, y, f"{record.get('TotalConsumption', 0):.2f}")
-                    # c.drawString(395, y, f"{record.get('InletTemp', 0):.2f}")
-                    # c.drawString(450, y, f"{record.get('OutletTemp', 0):.2f}")
-                    # c.drawString(510, y, f"{record.get('InletDensity', 0):.2f}")
-                    # c.drawString(580, y, f"{record.get('OutletDensity', 0):.2f}")
+#                 else:
+#                     c.drawString(110, y, f"{record.get('Inlet', 0):.2f}")
+#                     c.drawString(165, y, f"{record.get('Outlet', 0):.2f}")
+#                     c.drawString(220, y, f"{record.get('TotalConsumption', 0):.2f}")
+#                     # c.drawString(395, y, f"{record.get('InletTemp', 0):.2f}")
+#                     # c.drawString(450, y, f"{record.get('OutletTemp', 0):.2f}")
+#                     # c.drawString(510, y, f"{record.get('InletDensity', 0):.2f}")
+#                     # c.drawString(580, y, f"{record.get('OutletDensity', 0):.2f}")
 
-            records_per_page = 28
-            total_pages = ceil(len(records) / records_per_page)
+#             records_per_page = 28
+#             total_pages = ceil(len(records) / records_per_page)
 
-            for page in range(total_pages):
-                if page > 0:
-                    c.showPage()
-                    c.setFont("Helvetica-Bold", 16)
-                    c.drawString(50, 550, f"{result['name']} - Detailed Readings")
+#             for page in range(total_pages):
+#                 if page > 0:
+#                     c.showPage()
+#                     c.setFont("Helvetica-Bold", 16)
+#                     c.drawString(50, 550, f"{result['name']} - Detailed Readings")
 
-                    c.setFont("Helvetica", 10)
-                    c.drawString(50, 530, f"From: {start}  To: {end}")
-                    c.drawString(350, 530, f"Interval: {interval.upper()}")
+#                     c.setFont("Helvetica", 10)
+#                     c.drawString(50, 530, f"From: {start}  To: {end}")
+#                     c.drawString(350, 530, f"Interval: {interval.upper()}")
 
-                y = 500
+#                 y = 500
 
-                c.setFont("Helvetica-Bold", 8)
-                c.drawString(650, 530, f"Page {page + 1}/{total_pages}")
+#                 c.setFont("Helvetica-Bold", 8)
+#                 c.drawString(650, 530, f"Page {page + 1}/{total_pages}")
 
-                draw_headers(y)
-                y -= 15
+#                 draw_headers(y)
+#                 y -= 15
 
-                page_records = records[
-                    page * records_per_page:(page + 1) * records_per_page
-                ]
+#                 page_records = records[
+#                     page * records_per_page:(page + 1) * records_per_page
+#                 ]
 
-                for record in page_records:
-                    draw_record(record, y)
-                    y -= 12
+#                 for record in page_records:
+#                     draw_record(record, y)
+#                     y -= 12
 
-        c.save()
-        buffer.seek(0)
+#         c.save()
+#         buffer.seek(0)
 
-        filename = (
-            f"{engine_type}_{interval}_"
-            f"{start.replace(' ', '_').replace(':', '-')}_to_"
-            f"{end.replace(' ', '_').replace(':', '-')}.pdf"
-        )
+#         filename = (
+#             f"{engine_type}_{interval}_"
+#             f"{start.replace(' ', '_').replace(':', '-')}_to_"
+#             f"{end.replace(' ', '_').replace(':', '-')}.pdf"
+#         )
 
-        return send_file(
-            buffer,
-            mimetype="application/pdf",
-            download_name=filename,
-            as_attachment=True
-        )
+#         return send_file(
+#             buffer,
+#             mimetype="application/pdf",
+#             download_name=filename,
+#             as_attachment=True
+#         )
 
-    except Exception as e:
-        print(f"PDF download error: {e}")
-        return jsonify({"error": str(e)}), 500
+#     except Exception as e:
+#         print(f"PDF download error: {e}")
+#         return jsonify({"error": str(e)}), 500
 
 
 # @app.route("/download_pdf")
@@ -1511,296 +1511,537 @@ def download_pdf():
 #         print(f"PDF download error: {e}")
 #         return jsonify({"error": str(e)}), 500
 
-# @app.route("/download_pdf")
-# @login_required
-# def download_pdf():
-#     """Download PDF report for selected engine"""
-#     try:
-#         from reportlab.lib.pagesizes import letter, landscape
-#         from reportlab.pdfgen import canvas
-#         from reportlab.lib.utils import simpleSplit
-#         from math import ceil
-        
-#         # Get parameters
-#         engine_type = request.args.get("type", "PME")
-#         start = request.args.get("start", "").replace("T", " ")
-#         end = request.args.get("end", "").replace("T", " ")
-#         interval = request.args.get("interval", "hour")
-        
-#         if not start or not end:
-#             return jsonify({"error": "Start and end time required"}), 400
-        
-#         # Fetch data
-#         result = fetch_engine_consumption(engine_type, start, end, interval)
-        
-#         if not result:
-#             return jsonify({"error": "Invalid engine type"}), 400
-        
-#         # Sort records and calculate running totals and differences
-#         if result['records']:
-#             records = sorted(result['records'], key=lambda x: x['Timestamp'])
-            
-#             # Calculate running totals and differences
-#             running_total_mass = 0
-#             running_total_volume = 0
-#             prev_consumption = None
-            
-#             # Get initial values (first record in the range)
-#             if records:
-#                 first_record = records[0]
-#                 if engine_type == 'consumpution':
-#                     initial_mass = first_record.get('FT9_MassFlow', 0)
-#                     initial_volume = first_record.get('FT9_VolumeTotal', 0)
-#                 else:
-#                     config = {
-#                         'PME': {'inlet': 'FT1', 'outlet': 'FT2'},
-#                         'SME': {'inlet': 'FT3', 'outlet': 'FT4'},
-#                         'PAE': {'inlet': 'FT5', 'outlet': 'FT6'},
-#                         'SAE': {'inlet': 'FT7', 'outlet': 'FT8'}
-#                     }
-#                     cfg = config[engine_type]
-#                     initial_mass = first_record.get(f"{cfg['inlet']}_MassFlow", 0) + first_record.get(f"{cfg['outlet']}_MassFlow", 0)
-#                     initial_volume = first_record.get(f"{cfg['inlet']}_VolumeTotal", 0) + first_record.get(f"{cfg['outlet']}_VolumeTotal", 0)
-                
-#                 # Get final values (last record in the range)
-#                 last_record = records[-1]
-#                 if engine_type == 'consumpution':
-#                     final_mass = last_record.get('FT9_MassFlow', 0)
-#                     final_volume = last_record.get('FT9_VolumeTotal', 0)
-#                 else:
-#                     final_mass = last_record.get(f"{cfg['inlet']}_MassFlow", 0) + last_record.get(f"{cfg['outlet']}_MassFlow", 0)
-#                     final_volume = last_record.get(f"{cfg['inlet']}_VolumeTotal", 0) + last_record.get(f"{cfg['outlet']}_VolumeTotal", 0)
-                
-#                 # Calculate total consumption for the period
-#                 total_mass_consumption = final_mass - initial_mass
-#                 total_volume_consumption = final_volume - initial_volume
-            
-#             # Add running totals and differences to each record
-#             for i, record in enumerate(records):
-#                 if engine_type == 'consumpution':
-#                     current_mass = record.get('FT9_MassFlow', 0)
-#                     current_volume = record.get('FT9_VolumeTotal', 0)
-#                 else:
-#                     current_mass = record.get(f"{cfg['inlet']}_MassFlow", 0) + record.get(f"{cfg['outlet']}_MassFlow", 0)
-#                     current_volume = record.get(f"{cfg['inlet']}_VolumeTotal", 0) + record.get(f"{cfg['outlet']}_VolumeTotal", 0)
-                
-#                 running_total_mass += current_mass
-#                 running_total_volume += current_volume
-                
-#                 record['RunningTotalMass'] = round(running_total_mass, 5)
-#                 record['RunningTotalVolume'] = round(running_total_volume, 5)
-                
-#                 # Calculate consumption difference from previous
-#                 if prev_consumption is not None:
-#                     record['Consumption_Difference'] = record['Consumption'] - prev_consumption
-#                 else:
-#                     record['Consumption_Difference'] = 0
-#                 prev_consumption = record['Consumption']
-        
-#         # Create PDF
-#         buffer = BytesIO()
-#         c = canvas.Canvas(buffer, pagesize=landscape(letter))
-        
-#         # Title Page
-#         c.setFont("Helvetica-Bold", 20)
-#         c.drawString(50, 550, f"{result['name']} Report")
-        
-#         c.setFont("Helvetica", 12)
-#         c.drawString(50, 520, f"From: {start}")
-#         c.drawString(350, 520, f"To: {end}")
-#         c.drawString(50, 500, f"Interval: {interval.upper()}")
-#         c.drawString(350, 500, f"Formula: {result['formula']}")
-        
-#         # Summary Statistics
-#         c.setFont("Helvetica-Bold", 14)
-#         c.drawString(50, 450, "Summary Statistics")
-        
-#         c.setFont("Helvetica", 12)
-#         c.drawString(50, 420, f"Total Records: {result['record_count']}")
-#         c.drawString(50, 400, f"Total Consumption: {result['total_consumption']} L")
-#         c.drawString(50, 380, f"Average Consumption: {result['avg_consumption']} L")
-        
-#         # Add period totals if records exist
-#         if result['records']:
-#             c.drawString(50, 360, f"Initial Mass: {initial_mass:.5f} T")
-#             c.drawString(250, 360, f"Final Mass: {final_mass:.5f} T")
-#             c.drawString(450, 360, f"Mass Consumption: {total_mass_consumption:.5f} T")
-            
-#             c.drawString(50, 340, f"Initial Volume: {initial_volume:.5f} L")
-#             c.drawString(250, 340, f"Final Volume: {final_volume:.5f} L")
-#             c.drawString(450, 340, f"Volume Consumption: {total_volume_consumption:.5f} L")
-        
-#         # Add line
-#         c.line(50, 320, 750, 320)
-        
-#         # New page for detailed data
-#         c.showPage()
-        
-#         # Detailed Data Page
-#         c.setFont("Helvetica-Bold", 16)
-#         c.drawString(50, 550, f"{result['name']} - Detailed Readings")
-#         c.setFont("Helvetica", 10)
-#         c.drawString(50, 530, f"From: {start}  To: {end}")
-#         c.drawString(350, 530, f"Interval: {interval.upper()}")
-        
-#         if not result['records']:
-#             c.setFont("Helvetica", 12)
-#             c.drawString(50, 450, "No data found for selected date range")
-#         else:
-#             # Table headers - expanded to include running totals
-#             y = 500
-#             c.setFont("Helvetica-Bold", 6)  # Even smaller font to fit all columns
-            
-#             if engine_type == 'consumpution':
-#                 c.drawString(50, y, "Timestamp")
-#                 c.drawString(120, y, "FT9 Vol")
-#                 c.drawString(170, y, "Consumption")
-#                 c.drawString(220, y, "Diff")
-#                 c.drawString(270, y, "Run Mass")
-#                 c.drawString(320, y, "Run Vol")
-#                 c.drawString(370, y, "Mass Flow")
-#                 c.drawString(420, y, "Temp")
-#                 c.drawString(470, y, "Density")
-#             else:
-#                 c.drawString(50, y, "Timestamp")
-#                 c.drawString(110, y, "In Vol")
-#                 c.drawString(160, y, "Out Vol")
-#                 c.drawString(210, y, "Consumption")
-#                 c.drawString(260, y, "Diff")
-#                 c.drawString(310, y, "Run Mass")
-#                 c.drawString(360, y, "Run Vol")
-#                 c.drawString(410, y, "In Mass")
-#                 c.drawString(460, y, "Out Mass")
-#                 c.drawString(510, y, "In Temp")
-#                 c.drawString(560, y, "Out Temp")
-            
-#             y -= 15
-#             c.setFont("Helvetica", 5.5)
-            
-#             # Calculate pages needed
-#             records_per_page = 20  # Fewer records per page due to more columns
-#             total_pages = ceil(len(result['records']) / records_per_page)
-            
-#             for page in range(total_pages):
-#                 if page > 0:
-#                     c.showPage()
-#                     y = 550
-#                     c.setFont("Helvetica-Bold", 6)
-#                     c.drawString(50, y, f"{result['name']} - Page {page+1}/{total_pages}")
-#                     y -= 20
-#                     c.setFont("Helvetica-Bold", 6)
-                    
-#                     # Repeat headers
-#                     if engine_type == 'consumpution':
-#                         c.drawString(50, y, "Timestamp")
-#                         c.drawString(120, y, "FT9 Vol")
-#                         c.drawString(170, y, "Consumption")
-#                         c.drawString(220, y, "Diff")
-#                         c.drawString(270, y, "Run Mass")
-#                         c.drawString(320, y, "Run Vol")
-#                         c.drawString(370, y, "Mass Flow")
-#                         c.drawString(420, y, "Temp")
-#                         c.drawString(470, y, "Density")
-#                     else:
-#                         c.drawString(50, y, "Timestamp")
-#                         c.drawString(110, y, "In Vol")
-#                         c.drawString(160, y, "Out Vol")
-#                         c.drawString(210, y, "Consumption")
-#                         c.drawString(260, y, "Diff")
-#                         c.drawString(310, y, "Run Mass")
-#                         c.drawString(360, y, "Run Vol")
-#                         c.drawString(410, y, "In Mass")
-#                         c.drawString(460, y, "Out Mass")
-#                         c.drawString(510, y, "In Temp")
-#                         c.drawString(560, y, "Out Temp")
-                    
-#                     y -= 15
-#                     c.setFont("Helvetica", 5.5)
-                
-#                 page_records = result['records'][page * records_per_page:(page + 1) * records_per_page]
-                
-#                 for record in page_records:
-#                     if y < 50:
-#                         break
-                    
-#                     if engine_type == 'consumpution':
-#                         c.drawString(50, y, str(record.get('Timestamp', ''))[5:16])
-#                         c.drawString(120, y, f"{record.get('FT9_VolumeTotal', 0):.2f}")
-#                         c.drawString(170, y, f"{record.get('Consumption', 0):.2f}")
-#                         c.drawString(220, y, f"{record.get('Consumption_Difference', 0):.2f}")
-#                         c.drawString(270, y, f"{record.get('RunningTotalMass', 0):.2f}")
-#                         c.drawString(320, y, f"{record.get('RunningTotalVolume', 0):.2f}")
-#                         c.drawString(370, y, f"{record.get('FT9_MassFlow', 0):.2f}")
-#                         c.drawString(420, y, f"{record.get('FT9_Temp', 0):.1f}")
-#                         c.drawString(470, y, f"{record.get('FT9_Density', 0):.2f}")
-#                     else:
-#                         if engine_type == 'PME':
-#                             c.drawString(50, y, str(record.get('Timestamp', ''))[5:16])
-#                             c.drawString(110, y, f"{record.get('FT1_VolumeTotal', 0):.2f}")
-#                             c.drawString(160, y, f"{record.get('FT2_VolumeTotal', 0):.2f}")
-#                             c.drawString(210, y, f"{record.get('Consumption', 0):.2f}")
-#                             c.drawString(260, y, f"{record.get('Consumption_Difference', 0):.2f}")
-#                             c.drawString(310, y, f"{record.get('RunningTotalMass', 0):.2f}")
-#                             c.drawString(360, y, f"{record.get('RunningTotalVolume', 0):.2f}")
-#                             c.drawString(410, y, f"{record.get('FT1_MassFlow', 0):.2f}")
-#                             c.drawString(460, y, f"{record.get('FT2_MassFlow', 0):.2f}")
-#                             c.drawString(510, y, f"{record.get('FT1_Temp', 0):.1f}")
-#                             c.drawString(560, y, f"{record.get('FT2_Temp', 0):.1f}")
-#                         elif engine_type == 'SME':
-#                             c.drawString(50, y, str(record.get('Timestamp', ''))[5:16])
-#                             c.drawString(110, y, f"{record.get('FT3_VolumeTotal', 0):.2f}")
-#                             c.drawString(160, y, f"{record.get('FT4_VolumeTotal', 0):.2f}")
-#                             c.drawString(210, y, f"{record.get('Consumption', 0):.2f}")
-#                             c.drawString(260, y, f"{record.get('Consumption_Difference', 0):.2f}")
-#                             c.drawString(310, y, f"{record.get('RunningTotalMass', 0):.2f}")
-#                             c.drawString(360, y, f"{record.get('RunningTotalVolume', 0):.2f}")
-#                             c.drawString(410, y, f"{record.get('FT3_MassFlow', 0):.2f}")
-#                             c.drawString(460, y, f"{record.get('FT4_MassFlow', 0):.2f}")
-#                             c.drawString(510, y, f"{record.get('FT3_Temp', 0):.1f}")
-#                             c.drawString(560, y, f"{record.get('FT4_Temp', 0):.1f}")
-#                         elif engine_type == 'PAE':
-#                             c.drawString(50, y, str(record.get('Timestamp', ''))[5:16])
-#                             c.drawString(110, y, f"{record.get('FT5_VolumeTotal', 0):.2f}")
-#                             c.drawString(160, y, f"{record.get('FT6_VolumeTotal', 0):.2f}")
-#                             c.drawString(210, y, f"{record.get('Consumption', 0):.2f}")
-#                             c.drawString(260, y, f"{record.get('Consumption_Difference', 0):.2f}")
-#                             c.drawString(310, y, f"{record.get('RunningTotalMass', 0):.2f}")
-#                             c.drawString(360, y, f"{record.get('RunningTotalVolume', 0):.2f}")
-#                             c.drawString(410, y, f"{record.get('FT5_MassFlow', 0):.2f}")
-#                             c.drawString(460, y, f"{record.get('FT6_MassFlow', 0):.2f}")
-#                             c.drawString(510, y, f"{record.get('FT5_Temp', 0):.1f}")
-#                             c.drawString(560, y, f"{record.get('FT6_Temp', 0):.1f}")
-#                         elif engine_type == 'SAE':
-#                             c.drawString(50, y, str(record.get('Timestamp', ''))[5:16])
-#                             c.drawString(110, y, f"{record.get('FT7_VolumeTotal', 0):.2f}")
-#                             c.drawString(160, y, f"{record.get('FT8_VolumeTotal', 0):.2f}")
-#                             c.drawString(210, y, f"{record.get('Consumption', 0):.2f}")
-#                             c.drawString(260, y, f"{record.get('Consumption_Difference', 0):.2f}")
-#                             c.drawString(310, y, f"{record.get('RunningTotalMass', 0):.2f}")
-#                             c.drawString(360, y, f"{record.get('RunningTotalVolume', 0):.2f}")
-#                             c.drawString(410, y, f"{record.get('FT7_MassFlow', 0):.2f}")
-#                             c.drawString(460, y, f"{record.get('FT8_MassFlow', 0):.2f}")
-#                             c.drawString(510, y, f"{record.get('FT7_Temp', 0):.1f}")
-#                             c.drawString(560, y, f"{record.get('FT8_Temp', 0):.1f}")
-                    
-#                     y -= 12
-        
-#         c.save()
-#         buffer.seek(0)
-        
-#         # Generate filename
-#         filename = f"{engine_type}_{interval}_{start.replace(' ', '_')}_to_{end.replace(' ', '_')}.pdf"
-        
-#         return send_file(
-#             buffer,
-#             mimetype="application/pdf",
-#             download_name=filename,
-#             as_attachment=True
-#         )
-        
-    # except Exception as e:
-    #     print(f"PDF download error: {e}")
-    #     return jsonify({"error": str(e)}), 500
+from io import BytesIO
+from math import ceil
+from flask import request, jsonify, send_file
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.pdfgen import canvas
+
+
+def fetch_engine_consumption(engine_type, start, end, interval="hour"):
+    deviceid = "susanad"
+
+    engine_config = {
+        "PME": {
+            "name": "PME Main Engine (P)",
+            "inlet_col": "FT1Volumetotal",
+            "outlet_col": "FT2Volumetotal",
+            "total_col": "ME1Volumetotal",
+            "inlet_temp_col": "FT1Temp",
+            "outlet_temp_col": "FT2Temp",
+            "inlet_density_col": "FT1Density",
+            "outlet_density_col": "FT2Density",
+            "formula": "ME1VolumeTotal"
+        },
+        "SME": {
+            "name": "SME Main Engine (S)",
+            "inlet_col": "FT3Volumetotal",
+            "outlet_col": "FT4Volumetotal",
+            "total_col": "ME2Volumetotal",
+            "inlet_temp_col": "FT3Temp",
+            "outlet_temp_col": "FT4Temp",
+            "inlet_density_col": "FT3Density",
+            "outlet_density_col": "FT4Density",
+            "formula": "ME2VolumeTotal"
+        },
+        "AE1": {
+            "name": "AE1 Auxiliary Engine 1",
+            "inlet_col": "FT5Volumetotal",
+            "outlet_col": "FT6Volumetotal",
+            "total_col": "AE1Volumetotal",
+            "inlet_temp_col": "FT5Temp",
+            "outlet_temp_col": "FT6Temp",
+            "inlet_density_col": "FT5Density",
+            "outlet_density_col": "FT6Density",
+            "formula": "AE1VolumeTotal"
+        },
+        "AE2": {
+            "name": "AE2 Auxiliary Engine 2",
+            "inlet_col": "FT7Volumetotal",
+            "outlet_col": "FT8Volumetotal",
+            "total_col": "AE2Volumetotal",
+            "inlet_temp_col": "FT7Temp",
+            "outlet_temp_col": "FT8Temp",
+            "inlet_density_col": "FT7Density",
+            "outlet_density_col": "FT8Density",
+            "formula": "AE2VolumeTotal"
+        },
+        "AE3": {
+            "name": "AE3 Auxiliary Engine 3",
+            "inlet_col": "FT9Volumetotal",
+            "outlet_col": "FT10Volumetotal",
+            "total_col": "AE3Volumetotal",
+            "inlet_temp_col": "FT9Temp",
+            "outlet_temp_col": "FT10Temp",
+            "inlet_density_col": "FT9Density",
+            "outlet_density_col": "FT10Density",
+            "formula": "AE3VolumeTotal"
+        },
+        "AE4": {
+            "name": "AE4 Auxiliary Engine 4",
+            "inlet_col": "FT11Volumetotal",
+            "outlet_col": "FT12Volumetotal",
+            "total_col": "AE4Volumetotal",
+            "inlet_temp_col": "FT11Temp",
+            "outlet_temp_col": "FT12Temp",
+            "inlet_density_col": "FT11Density",
+            "outlet_density_col": "FT12Density",
+            "formula": "AE4VolumeTotal"
+        },
+        "TOTAL": {
+            "name": "TOTAL Consumption",
+            "formula": "ME1 + ME2 + AE1 + AE2 + AE3 + AE4"
+        }
+    }
+
+    if engine_type not in engine_config:
+        return None
+
+    config = engine_config[engine_type]
+
+    try:
+        start_dt = parse_dt(start)
+        end_dt = parse_dt(end)
+    except Exception as e:
+        print(f"Date parsing error: {e}")
+        return None
+
+    def get_float(row, key):
+        try:
+            return float(row.get(key, 0) or 0)
+        except Exception:
+            return 0.0
+
+    def get_interval_key(dt, raw_ts):
+        if interval == "minute":
+            return dt.strftime("%Y-%m-%d %H:%M")
+        elif interval == "hour":
+            return dt.strftime("%Y-%m-%d %H:00")
+        elif interval == "daily":
+            return dt.strftime("%Y-%m-%d")
+        elif interval == "monthly":
+            return dt.strftime("%Y-%m")
+        elif interval == "yearly":
+            return dt.strftime("%Y")
+        elif interval == "raw":
+            return raw_ts
+        else:
+            return raw_ts
+
+    # Query all rows for device
+    query = f"PartitionKey eq '{deviceid}'"
+    entities = list(table_client.query_entities(query))
+
+    # Filter by selected time range
+    filtered_entities = []
+    for entity in entities:
+        ts = entity.get("TimestampIST")
+        if not ts:
+            continue
+
+        try:
+            ts_dt = parse_dt(ts)
+            if start_dt <= ts_dt <= end_dt:
+                filtered_entities.append(entity)
+        except Exception:
+            continue
+
+    filtered_entities.sort(key=lambda x: x.get("TimestampIST", ""))
+
+    if not filtered_entities:
+        return {
+            "engine_type": engine_type,
+            "name": config["name"],
+            "formula": config["formula"],
+            "records": [],
+            "total_consumption": 0,
+            "avg_consumption": 0,
+            "record_count": 0,
+            "interval": interval,
+            "selected_range_difference": 0,
+            "first_record_consumption": 0,
+            "last_record_consumption": 0
+        }
+
+    # Build raw records
+    raw_records = []
+
+    for entity in filtered_entities:
+        ts = entity.get("TimestampIST")
+        ts_dt = parse_dt(ts)
+        interval_key = get_interval_key(ts_dt, ts)
+
+        if engine_type == "TOTAL":
+            me1 = get_float(entity, "ME1Volumetotal")
+            me2 = get_float(entity, "ME2Volumetotal")
+            ae1 = get_float(entity, "AE1Volumetotal")
+            ae2 = get_float(entity, "AE2Volumetotal")
+            ae3 = get_float(entity, "AE3Volumetotal")
+            ae4 = get_float(entity, "AE4Volumetotal")
+
+            total_consumption = me1 + me2 + ae1 + ae2 + ae3 + ae4
+
+            record = {
+                "Timestamp": ts,
+                "Interval": interval_key,
+                "EngineType": engine_type,
+                "EngineName": config["name"],
+                "ME1": round(me1, 5),
+                "ME2": round(me2, 5),
+                "AE1": round(ae1, 5),
+                "AE2": round(ae2, 5),
+                "AE3": round(ae3, 5),
+                "AE4": round(ae4, 5),
+                "Inlet": 0,
+                "Outlet": 0,
+                "TotalConsumption": round(total_consumption, 5),
+                "InletTemp": 0,
+                "OutletTemp": 0,
+                "InletDensity": 0,
+                "OutletDensity": 0,
+                "Consumption": round(total_consumption, 5)
+            }
+
+        else:
+            inlet_value = get_float(entity, config["inlet_col"])
+            outlet_value = get_float(entity, config["outlet_col"])
+            total_consumption = get_float(entity, config["total_col"])
+
+            record = {
+                "Timestamp": ts,
+                "Interval": interval_key,
+                "EngineType": engine_type,
+                "EngineName": config["name"],
+                "Inlet": round(inlet_value, 5),
+                "Outlet": round(outlet_value, 5),
+                "TotalConsumption": round(total_consumption, 5),
+                "InletTemp": round(get_float(entity, config["inlet_temp_col"]), 2),
+                "OutletTemp": round(get_float(entity, config["outlet_temp_col"]), 2),
+                "InletDensity": round(get_float(entity, config["inlet_density_col"]), 2),
+                "OutletDensity": round(get_float(entity, config["outlet_density_col"]), 2),
+                "Consumption": round(total_consumption, 5)
+            }
+
+        raw_records.append(record)
+
+    # If raw interval requested, use records directly
+    if interval == "raw":
+        records = raw_records
+    else:
+        grouped = {}
+
+        for record in raw_records:
+            key = record["Interval"]
+
+            if key not in grouped:
+                grouped[key] = {
+                    "Timestamp": record["Timestamp"],
+                    "Interval": key,
+                    "EngineType": engine_type,
+                    "EngineName": config["name"],
+                    "RecordCount": 0,
+                    "Inlet": 0,
+                    "Outlet": 0,
+                    "TotalConsumption": 0,
+                    "InletTemp": 0,
+                    "OutletTemp": 0,
+                    "InletDensity": 0,
+                    "OutletDensity": 0,
+                    "Consumption": 0
+                }
+
+                if engine_type == "TOTAL":
+                    grouped[key]["ME1"] = 0
+                    grouped[key]["ME2"] = 0
+                    grouped[key]["AE1"] = 0
+                    grouped[key]["AE2"] = 0
+                    grouped[key]["AE3"] = 0
+                    grouped[key]["AE4"] = 0
+
+            grouped[key]["RecordCount"] += 1
+            grouped[key]["Inlet"] += record.get("Inlet", 0)
+            grouped[key]["Outlet"] += record.get("Outlet", 0)
+            grouped[key]["TotalConsumption"] += record.get("TotalConsumption", 0)
+            grouped[key]["InletTemp"] += record.get("InletTemp", 0)
+            grouped[key]["OutletTemp"] += record.get("OutletTemp", 0)
+            grouped[key]["InletDensity"] += record.get("InletDensity", 0)
+            grouped[key]["OutletDensity"] += record.get("OutletDensity", 0)
+            grouped[key]["Consumption"] += record.get("Consumption", 0)
+
+            if engine_type == "TOTAL":
+                grouped[key]["ME1"] += record.get("ME1", 0)
+                grouped[key]["ME2"] += record.get("ME2", 0)
+                grouped[key]["AE1"] += record.get("AE1", 0)
+                grouped[key]["AE2"] += record.get("AE2", 0)
+                grouped[key]["AE3"] += record.get("AE3", 0)
+                grouped[key]["AE4"] += record.get("AE4", 0)
+
+        records = []
+
+        for _, group in grouped.items():
+            count = group["RecordCount"]
+
+            if engine_type == "TOTAL":
+                group["ME1"] = round(group["ME1"], 5)
+                group["ME2"] = round(group["ME2"], 5)
+                group["AE1"] = round(group["AE1"], 5)
+                group["AE2"] = round(group["AE2"], 5)
+                group["AE3"] = round(group["AE3"], 5)
+                group["AE4"] = round(group["AE4"], 5)
+                group["TotalConsumption"] = round(group["TotalConsumption"], 5)
+                group["Consumption"] = round(group["Consumption"], 5)
+            else:
+                group["Inlet"] = round(group["Inlet"], 5)
+                group["Outlet"] = round(group["Outlet"], 5)
+                group["TotalConsumption"] = round(group["TotalConsumption"], 5)
+                group["InletTemp"] = round(group["InletTemp"] / count, 2) if count else 0
+                group["OutletTemp"] = round(group["OutletTemp"] / count, 2) if count else 0
+                group["InletDensity"] = round(group["InletDensity"] / count, 2) if count else 0
+                group["OutletDensity"] = round(group["OutletDensity"] / count, 2) if count else 0
+                group["Consumption"] = round(group["TotalConsumption"], 5)
+
+            records.append(group)
+
+        records.sort(key=lambda x: x["Timestamp"])
+
+    total_consumption = sum(r.get("Consumption", 0) for r in records)
+    avg_consumption = total_consumption / len(records) if records else 0
+
+    # Difference based on selected first and last record
+    first_record_consumption = float(records[0].get("Consumption", 0) or 0) if records else 0
+    last_record_consumption = float(records[-1].get("Consumption", 0) or 0) if records else 0
+    selected_range_difference = round(last_record_consumption - first_record_consumption, 5)
+
+    return {
+        "engine_type": engine_type,
+        "name": config["name"],
+        "formula": config["formula"],
+        "records": records,
+        "total_consumption(m³)": round(total_consumption, 5),
+        "avg_consumption(m³)": round(avg_consumption, 5),
+        "record_count": len(records),
+        "interval": interval,
+        "selected_range_difference(m³)": selected_range_difference,
+        "first_record_consumption": round(first_record_consumption, 5),
+        "last_record_consumption": round(last_record_consumption, 5)
+    }
+
+
+@app.route("/download_pdf")
+@login_required
+def download_pdf():
+    try:
+        # Get parameters
+        engine_type = request.args.get("type", "PME")
+        start = request.args.get("start", "").replace("T", " ")
+        end = request.args.get("end", "").replace("T", " ")
+        interval = request.args.get("interval", "hour")
+
+        if not start or not end:
+            return jsonify({"error": "Start and end time required"}), 400
+
+        # Fetch processed result
+        result = fetch_engine_consumption(engine_type, start, end, interval)
+
+        if not result:
+            return jsonify({"error": "Invalid engine type"}), 400
+
+        records = sorted(result["records"], key=lambda x: x.get("Timestamp", ""))
+
+        # Add running total and per-row difference
+        running_total = 0
+        prev_consumption = None
+
+        for record in records:
+            current_consumption = float(record.get("Consumption", 0) or 0)
+
+            running_total += current_consumption
+            record["RunningTotal"] = round(running_total, 5)
+
+            if prev_consumption is None:
+                record["Consumption_Difference"] = 0
+            else:
+                record["Consumption_Difference"] = round(
+                    current_consumption - prev_consumption, 5
+                )
+
+            prev_consumption = current_consumption
+
+        # Read selected-range difference from result
+        selected_range_difference = result.get("selected_range_difference", 0)
+        first_record_consumption = result.get("first_record_consumption", 0)
+        last_record_consumption = result.get("last_record_consumption", 0)
+
+        # Create PDF
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=landscape(letter))
+        page_width, page_height = landscape(letter)
+
+        # =====================
+        # Summary Page
+        # =====================
+        c.setFont("Helvetica-Bold", 20)
+        c.drawString(50, 550, f"{result['name']} Report")
+
+        c.setFont("Helvetica", 12)
+        c.drawString(50, 520, f"From: {start}")
+        c.drawString(350, 520, f"To: {end}")
+        c.drawString(50, 500, f"Interval: {interval.upper()}")
+        c.drawString(350, 500, f"Formula: {result['formula']}")
+
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(50, 450, "Summary Statistics")
+
+        c.setFont("Helvetica", 12)
+        c.drawString(50, 420, f"Total Records: {result['record_count']}")
+        c.drawString(50, 400, f"Total Consumption: {result['total_consumption']}")
+        c.drawString(50, 380, f"Average Consumption: {result['avg_consumption']}")
+        c.drawString(50, 360, f"First Record Consumption: {first_record_consumption}")
+        c.drawString(50, 340, f"Last Record Consumption: {last_record_consumption}")
+        c.drawString(
+            50,
+            320,
+            f"Selected Range Difference (Last - First): {selected_range_difference}"
+        )
+
+        if records:
+            c.drawString(50, 290, f"First Reading Time: {records[0].get('Timestamp', '')}")
+            c.drawString(50, 270, f"Last Reading Time: {records[-1].get('Timestamp', '')}")
+
+        c.line(50, 240, 750, 240)
+
+        # =====================
+        # Detailed Data Pages
+        # =====================
+        c.showPage()
+
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(50, 550, f"{result['name']} - Detailed Readings")
+
+        c.setFont("Helvetica", 10)
+        c.drawString(50, 530, f"From: {start}  To: {end}")
+        c.drawString(350, 530, f"Interval: {interval.upper()}")
+
+        if not records:
+            c.setFont("Helvetica", 12)
+            c.drawString(50, 450, "No data found for selected date range")
+        else:
+            def draw_headers(y):
+                c.setFont("Helvetica-Bold", 6)
+
+                if engine_type == "TOTAL":
+                    headers = [
+                        ("Time", 50),
+                        ("ME1(m³)", 110),
+                        ("ME2(m³)", 155),
+                        ("AE1(m³)", 200),
+                        ("AE2(m³)", 245),
+                        ("AE3(m³)", 290),
+                        ("AE4(m³)", 335),
+                        ("Total(m³)", 385)
+                    ]
+                else:
+                    headers = [
+                        ("Time", 50),
+                        ("InletVol(m³)", 110),
+                        ("OutletVol(m³)", 180),
+                        ("Total Consumption(m³)", 260)
+                    ]
+
+                for text, x in headers:
+                    c.drawString(x, y, text)
+
+            def draw_record(record, y):
+                c.setFont("Helvetica", 5.5)
+
+                timestamp = str(record.get("Timestamp", ""))
+                short_time = timestamp[5:16] if len(timestamp) >= 16 else timestamp
+                c.drawString(50, y, short_time)
+
+                if engine_type == "TOTAL":
+                    c.drawString(110, y, f"{record.get('ME1', 0):.2f}")
+                    c.drawString(155, y, f"{record.get('ME2', 0):.2f}")
+                    c.drawString(200, y, f"{record.get('AE1', 0):.2f}")
+                    c.drawString(245, y, f"{record.get('AE2', 0):.2f}")
+                    c.drawString(290, y, f"{record.get('AE3', 0):.2f}")
+                    c.drawString(335, y, f"{record.get('AE4', 0):.2f}")
+                    c.drawString(385, y, f"{record.get('TotalConsumption', 0):.2f}")
+                else:
+                    c.drawString(110, y, f"{record.get('Inlet', 0):.2f}")
+                    c.drawString(180, y, f"{record.get('Outlet', 0):.2f}")
+                    c.drawString(260, y, f"{record.get('TotalConsumption', 0):.2f}")
+
+            records_per_page = 28
+            total_pages = ceil(len(records) / records_per_page)
+
+            for page in range(total_pages):
+                if page > 0:
+                    c.showPage()
+                    c.setFont("Helvetica-Bold", 16)
+                    c.drawString(50, 550, f"{result['name']} - Detailed Readings")
+                    c.setFont("Helvetica", 10)
+                    c.drawString(50, 530, f"From: {start}  To: {end}")
+                    c.drawString(350, 530, f"Interval: {interval.upper()}")
+
+                y = 500
+
+                c.setFont("Helvetica-Bold", 8)
+                c.drawString(650, 530, f"Page {page + 1}/{total_pages}")
+
+                draw_headers(y)
+                y -= 15
+
+                page_records = records[page * records_per_page:(page + 1) * records_per_page]
+
+                for record in page_records:
+                    draw_record(record, y)
+                    y -= 12
+
+                # Show selected range difference at end of last page
+                if page == total_pages - 1:
+                    y -= 10
+                    c.line(50, y, 750, y)
+                    y -= 18
+                    c.setFont("Helvetica-Bold", 10)
+                    c.drawString(
+                        50,
+                        y,
+                        f"Selected Range Difference (Last Record - First Record): {selected_range_difference} m³"
+                    )
+                    y -= 14
+                    c.setFont("Helvetica", 9)
+                    c.drawString(
+                        50,
+                        y,
+                        f"First Record Consumption: {first_record_consumption} m³"
+                    )
+                    y -= 12
+                    c.drawString(
+                        50,
+                        y,
+                        f"Last Record Consumption: {last_record_consumption} m³"
+                    )
+
+        c.save()
+        buffer.seek(0)
+
+        filename = (
+            f"{engine_type}_{interval}_"
+            f"{start.replace(' ', '_').replace(':', '-')}_to_"
+            f"{end.replace(' ', '_').replace(':', '-')}.pdf"
+        )
+
+        return send_file(
+            buffer,
+            mimetype="application/pdf",
+            download_name=filename,
+            as_attachment=True
+        )
+
+    except Exception as e:
+        print(f"PDF download error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 
 
