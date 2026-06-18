@@ -139,6 +139,7 @@ const panels = [
     {title:"AE3 OUTLET", prefix:"FT10"},
     {title:"AE4 INLET", prefix:"FT11"},
     {title:"AE4 OUTLET", prefix:"FT12"}
+    {title:"BUNKER FLOW", prefix:"FT15", isBunker:true}
 ];
 // Row structure
 const row1 = [
@@ -162,7 +163,7 @@ function buildDashboard(){
         card.className = "card";
         
         // Add special class for bunker card
-        if (panel.prefix === "FT9") {
+        if (panel.prefix === "FT15") {
             card.classList.add("bunker-card");
         }
 
