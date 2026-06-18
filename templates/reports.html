@@ -205,6 +205,7 @@ button:hover {
                     <option value="AE2">AE2 - Auxiliary Engine 2</option>
                     <option value="AE3">AE3 - Auxiliary Engine 3</option>
                     <option value="AE4">AE4 - Auxiliary Engine 4</option>
+                    <option value="BUNKER">BUNKER - Bunker Flow Meter</option>
                     <option value="TOTAL">TOTAL - Total Consumption </option>
             </select>
         </div>
@@ -312,6 +313,13 @@ const engineConfig = {
         formula: "FT11Volumetotal - FT12Volumetotal",
         description: "AE4 Consumption",
         meters: "FT11, FT12"
+    },
+
+    BUNKER: {
+        name: "BUNKER - Flow Meter",
+        formula: "FT15Volumetotal",
+        description: "Bunker Fuel Flow",
+        meters: "FT15"
     },
 
     FT1: { name:"FT1 - PME Inlet", formula:"FT1Volumetotal", description:"Individual Meter", meters:"FT1" },
