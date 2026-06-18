@@ -392,9 +392,9 @@ def parse_dt(value):
         except ValueError:
             return datetime.strptime(value.replace('T', ' '), "%Y-%m-%d %H:%M")
 
-========================
-Fetch Engine Consumption
-========================
+# ========================
+# Fetch Engine Consumption
+# ========================
 
 
 def fetch_engine_consumption(engine_type, start, end, interval="hour"):
@@ -649,9 +649,9 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
         "last_record_consumption": round(last_record_consumption, 5)
     }
 
-======================
-PDF Download
-======================
+# ======================
+# PDF Download
+# ======================
 
 @app.route("/download_pdf")
 @login_required
@@ -868,9 +868,9 @@ def download_pdf():
         print(f"PDF download error: {e}")
         return jsonify({"error": str(e)}), 500
 
-==================
-csv download
-==================
+# ==================
+# csv download
+# ==================
 
 @app.route("/download_csv")
 @login_required
