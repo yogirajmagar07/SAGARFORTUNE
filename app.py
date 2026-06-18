@@ -33,6 +33,31 @@ except:
 # =========================
 latest_cache = {}
 
+#==========================
+# Authentication
+#==========================
+API_KEY = os.environ.get("API_KEY")
+
+def api_key_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+
+        client_key = request.headers.get("X-API-Key")
+
+        if not client_key:
+            return jsonify({
+                "error": "API Key missing"
+            }), 401
+
+        if client_key != API_KEY:
+            return jsonify({
+                "error": "Invalid API Key"
+            }), 401
+
+        return f(*args, **kwargs)
+
+    return decorated
+
 # Login decorator
 def login_required(f):
     @wraps(f)
@@ -281,6 +306,7 @@ def latest():
 #     return Response(json.dumps({"readings": readings}, indent=4), mimetype="application/json")
 
 @app.route("/API")
+@api_key_required
 def api_readings():
     from_time = request.args.get("fromTime")
     to_time = request.args.get("toTime")
@@ -290,10 +316,26 @@ def api_readings():
         return jsonify({"error": "fromTime and toTime required"}), 400
 
     try:
-        start_dt = datetime.strptime(from_time, "%Y-%m-%d %H:%M:%S")
-        end_dt = datetime.strptime(to_time, "%Y-%m-%d %H:%M:%S")
+        start_dt = datetime.strptime(from_time, "%Y-%m-%dT%H:%M:%SZ")
+        end_dt = datetime.strptime(to_time, "%Y-%m-%dT%H:%M:%SZ")
     except Exception:
-        return jsonify({"error": "Invalid datetime format. Use YYYY-MM-DD HH:MM:SS"}), 400
+        return jsonify({"error": "Invalid datetime format. Use YYYY-MM-DDTHH:MM:SSZ"}), 400
+
+    # Convert API ISO time to Azure stored TimestampIST format
+    azure_from_time = start_dt.strftime("%Y-%m-%d %H:%M:%S")
+    azure_to_time = end_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    def get_float(row, key):
+        return float(row.get(key, 0) or 0)
+
+    def parse_azure_time(ts):
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%SZ"):
+            try:
+                return datetime.strptime(ts, fmt)
+            except Exception:
+                pass
+        return None
+
 
     engine_config = {
         "PME": {
@@ -334,19 +376,21 @@ def api_readings():
         }
     }
 
-    def get_float(row, key):
-        return float(row.get(key, 0) or 0)
-
     readings = []
 
     try:
         query = (
             f"PartitionKey eq '{deviceid}' "
-            f"and TimestampIST ge '{from_time}' "
-            f"and TimestampIST le '{to_time}'"
+            f"and TimestampIST ge '{azure_from_time}' "
+            f"and TimestampIST le '{azure_to_time}'"
         )
 
         entities = list(table_client.query_entities(query))
+
+        print("API Records Found =", len(entities))
+        if entities:
+            print("Sample TimestampIST =", entities[0].get("TimestampIST"))
+            print("Sample Keys =", list(entities[0].keys()))
 
         current_start = start_dt
 
@@ -367,9 +411,8 @@ def api_readings():
                 if not ts:
                     continue
 
-                try:
-                    ts_dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
-                except Exception:
+                ts_dt = parse_azure_time(ts)
+                if not ts_dt:
                     continue
 
                 if current_start <= ts_dt < current_end:
