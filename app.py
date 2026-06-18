@@ -397,6 +397,8 @@ def parse_dt(value):
 # ========================
 
 
+import math
+
 def fetch_engine_consumption(engine_type, start, end, interval="hour"):
     deviceid = "susanad"
 
@@ -410,7 +412,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "outlet_temp_col": "FT2Temp",
             "inlet_density_col": "FT1Density",
             "outlet_density_col": "FT2Density",
-            "formula": "ME1VolumeTotal"
+            "formula": "FT1Volumetotal - FT2Volumetotal"
         },
         "SME": {
             "name": "SME Main Engine (S)",
@@ -421,7 +423,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "outlet_temp_col": "FT4Temp",
             "inlet_density_col": "FT3Density",
             "outlet_density_col": "FT4Density",
-            "formula": "ME2VolumeTotal"
+            "formula": "FT3Volumetotal - FT4Volumetotal"
         },
         "AE1": {
             "name": "AE1 Auxiliary Engine 1",
@@ -432,7 +434,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "outlet_temp_col": "FT6Temp",
             "inlet_density_col": "FT5Density",
             "outlet_density_col": "FT6Density",
-            "formula": "AE1VolumeTotal"
+            "formula": "FT5Volumetotal - FT6Volumetotal"
         },
         "AE2": {
             "name": "AE2 Auxiliary Engine 2",
@@ -443,7 +445,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "outlet_temp_col": "FT8Temp",
             "inlet_density_col": "FT7Density",
             "outlet_density_col": "FT8Density",
-            "formula": "AE2VolumeTotal"
+            "formula": "FT7Volumetotal - FT8Volumetotal"
         },
         "AE3": {
             "name": "AE3 Auxiliary Engine 3",
@@ -454,7 +456,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "outlet_temp_col": "FT10Temp",
             "inlet_density_col": "FT9Density",
             "outlet_density_col": "FT10Density",
-            "formula": "AE3VolumeTotal"
+            "formula": "FT9Volumetotal - FT10Volumetotal"
         },
         "AE4": {
             "name": "AE4 Auxiliary Engine 4",
@@ -465,7 +467,18 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "outlet_temp_col": "FT12Temp",
             "inlet_density_col": "FT11Density",
             "outlet_density_col": "FT12Density",
-            "formula": "AE4VolumeTotal"
+            "formula": "FT11Volumetotal - FT12Volumetotal"
+        },
+        "BUNKER": {
+            "name": "BUNKER Flow Meter",
+            "inlet_col": "FT15Volumetotal",
+            "outlet_col": None,
+            "total_col": "FT15Volumetotal",
+            "inlet_temp_col": "FT15Temp",
+            "outlet_temp_col": None,
+            "inlet_density_col": "FT15Density",
+            "outlet_density_col": None,
+            "formula": "FT15Volumetotal"
         },
         "TOTAL": {
             "name": "TOTAL Consumption",
@@ -485,7 +498,17 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
         print(f"Date parsing error: {e}")
         return None
 
+    def safe_round(value, digits=5):
+        try:
+            if value is None or math.isnan(value) or math.isinf(value):
+                return 0.0
+            return round(value, digits)
+        except Exception:
+            return 0.0
+
     def get_float(row, key):
+        if not key:
+            return 0.0
         try:
             val = float(row.get(key, 0) or 0)
             if math.isnan(val) or math.isinf(val):
@@ -528,7 +551,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
         except Exception:
             continue
 
-    # Always sort properly by datetime
+    # Sort by timestamp
     filtered_entities.sort(key=lambda x: parse_dt(x.get("TimestampIST")))
 
     if not filtered_entities:
@@ -546,7 +569,6 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "last_record_consumption": 0
         }
 
-    # Build raw/snapshot records
     raw_records = []
 
     for entity in filtered_entities:
@@ -569,29 +591,33 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
                 "Interval": interval_key,
                 "EngineType": engine_type,
                 "EngineName": config["name"],
-                "ME1": round(me1, 5),
-                "ME2": round(me2, 5),
-                "AE1": round(ae1, 5),
-                "AE2": round(ae2, 5),
-                "AE3": round(ae3, 5),
-                "AE4": round(ae4, 5),
+                "ME1": safe_round(me1),
+                "ME2": safe_round(me2),
+                "AE1": safe_round(ae1),
+                "AE2": safe_round(ae2),
+                "AE3": safe_round(ae3),
+                "AE4": safe_round(ae4),
                 "Inlet": 0,
                 "Outlet": 0,
-                "TotalConsumption": round(total_consumption, 5),
+                "TotalConsumption": safe_round(total_consumption),
                 "InletTemp": 0,
                 "OutletTemp": 0,
                 "InletDensity": 0,
                 "OutletDensity": 0,
-                "Consumption": round(total_consumption, 5)
+                "Consumption": safe_round(total_consumption)
             }
 
         else:
             inlet_value = get_float(entity, config["inlet_col"])
-            outlet_value = get_float(entity, config["outlet_col"])
+            outlet_value = get_float(entity, config["outlet_col"]) if config["outlet_col"] else 0.0
             total_consumption = get_float(entity, config["total_col"])
 
-            # fallback if total_col missing/zero but inlet-outlet exists
-            if total_consumption == 0 and (inlet_value != 0 or outlet_value != 0):
+            # BUNKER is direct FT15 reading
+            if engine_type == "BUNKER":
+                total_consumption = inlet_value
+
+            # fallback if engine total column missing
+            elif total_consumption == 0 and (inlet_value != 0 or outlet_value != 0):
                 total_consumption = inlet_value - outlet_value
 
             record = {
@@ -599,14 +625,14 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
                 "Interval": interval_key,
                 "EngineType": engine_type,
                 "EngineName": config["name"],
-                "Inlet": round(inlet_value, 5),
-                "Outlet": round(outlet_value, 5),
-                "TotalConsumption": round(total_consumption, 5),
-                "InletTemp": round(get_float(entity, config["inlet_temp_col"]), 2),
-                "OutletTemp": round(get_float(entity, config["outlet_temp_col"]), 2),
-                "InletDensity": round(get_float(entity, config["inlet_density_col"]), 2),
-                "OutletDensity": round(get_float(entity, config["outlet_density_col"]), 2),
-                "Consumption": round(total_consumption, 5)
+                "Inlet": safe_round(inlet_value),
+                "Outlet": safe_round(outlet_value),
+                "TotalConsumption": safe_round(total_consumption),
+                "InletTemp": safe_round(get_float(entity, config["inlet_temp_col"]), 2),
+                "OutletTemp": safe_round(get_float(entity, config["outlet_temp_col"]), 2) if config["outlet_temp_col"] else 0,
+                "InletDensity": safe_round(get_float(entity, config["inlet_density_col"]), 2),
+                "OutletDensity": safe_round(get_float(entity, config["outlet_density_col"]), 2) if config["outlet_density_col"] else 0,
+                "Consumption": safe_round(total_consumption)
             }
 
         raw_records.append(record)
@@ -614,23 +640,27 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
     # RAW interval = actual rows
     if interval == "raw":
         records = raw_records
-
     else:
-        # SCADA-style grouped output:
-        # keep only the LAST record in each interval
+        # SCADA-style grouped output: keep only LAST record in each interval
         grouped = {}
-
         for record in raw_records:
             key = record["Interval"]
-            grouped[key] = record  # overwrite -> last record of interval remains
+            grouped[key] = record
 
         records = list(grouped.values())
         records.sort(key=lambda x: x["Timestamp"])
 
-    total_consumption = sum(r.get("Consumption", 0) for r in records if not math.isnan(r.get("Consumption", 0)))
-    avg_consumption = total_consumption / len(records) if records else 0
+    total_consumption = round(
+        sum(
+            r.get("Consumption", 0)
+            for r in records
+            if isinstance(r.get("Consumption", 0), (int, float))
+        ),
+        5
+    )
 
-    # Selected range difference uses first and last selected record totals
+    avg_consumption = round(total_consumption / len(records), 5) if records else 0
+
     first_record_consumption = float(records[0].get("Consumption", 0) or 0) if records else 0
     last_record_consumption = float(records[-1].get("Consumption", 0) or 0) if records else 0
     selected_range_difference = round(last_record_consumption - first_record_consumption, 5)
@@ -640,8 +670,8 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
         "name": config["name"],
         "formula": config["formula"],
         "records": records,
-        "total_consumption": round(total_consumption, 5),
-        "avg_consumption": round(avg_consumption, 5),
+        "total_consumption": total_consumption,
+        "avg_consumption": avg_consumption,
         "record_count": len(records),
         "interval": interval,
         "selected_range_difference": selected_range_difference,
