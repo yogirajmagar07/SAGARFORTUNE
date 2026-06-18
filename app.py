@@ -784,8 +784,15 @@ def download_pdf():
         else:
             def draw_headers(y):
                 c.setFont("Helvetica-Bold", 6)
+                if engine_type == "BUNKER":
+                    headers = [
+                        ("Time", 50),
+                        ("VolumeTotal (m³)", 160),
+                        ("MassTotal (T)", 320)
+                    ]
 
-                if engine_type == "TOTAL":
+
+                elif engine_type == "TOTAL":
                     headers = [
                         ("Time", 50),
                         ("ME1(m³)", 110),
@@ -813,8 +820,17 @@ def download_pdf():
                 timestamp = str(record.get("Timestamp", ""))
                 short_time = timestamp[5:16] if len(timestamp) >= 16 else timestamp
                 c.drawString(50, y, short_time)
+                if engine_type == "BUNKER":
+                    volume = float(record.get("TotalConsumption", 0) or 0)
+                    # Density (kg/m³) → convert to TONNES
+                    density = float(record.get("InletDensity", 0) or 0)
+                    mass = (volume * density) / 1000 if density else 0
 
-                if engine_type == "TOTAL":
+                    c.drawString(160, y, f"{volume:.2f}")
+                    c.drawString(320, y, f"{mass:.2f}")
+
+
+                elif engine_type == "TOTAL":
                     c.drawString(110, y, f"{record.get('ME1', 0):.2f}")
                     c.drawString(155, y, f"{record.get('ME2', 0):.2f}")
                     c.drawString(200, y, f"{record.get('AE1', 0):.2f}")
