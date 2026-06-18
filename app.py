@@ -1817,11 +1817,11 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
         "name": config["name"],
         "formula": config["formula"],
         "records": records,
-        "total_consumption(m³)": round(total_consumption, 5),
-        "avg_consumption(m³)": round(avg_consumption, 5),
+        "total_consumption": round(total_consumption, 5),
+        "avg_consumption": round(avg_consumption, 5),
         "record_count": len(records),
         "interval": interval,
-        "selected_range_difference(m³)": selected_range_difference,
+        "selected_range_difference": selected_range_difference,
         "first_record_consumption": round(first_record_consumption, 5),
         "last_record_consumption": round(last_record_consumption, 5)
     }
