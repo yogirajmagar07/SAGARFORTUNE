@@ -1517,6 +1517,13 @@ from flask import request, jsonify, send_file
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.pdfgen import canvas
 
+from io import BytesIO
+from math import ceil
+import math
+from flask import request, jsonify, send_file
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.pdfgen import canvas
+
 
 def fetch_engine_consumption(engine_type, start, end, interval="hour"):
     deviceid = "susanad"
@@ -1608,7 +1615,10 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
 
     def get_float(row, key):
         try:
-            return float(row.get(key, 0) or 0)
+            val = float(row.get(key, 0) or 0)
+            if math.isnan(val) or math.isinf(val):
+                return 0.0
+            return val
         except Exception:
             return 0.0
 
@@ -1632,7 +1642,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
     query = f"PartitionKey eq '{deviceid}'"
     entities = list(table_client.query_entities(query))
 
-    # Filter by selected time range
+    # Filter selected time range
     filtered_entities = []
     for entity in entities:
         ts = entity.get("TimestampIST")
@@ -1646,7 +1656,8 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
         except Exception:
             continue
 
-    filtered_entities.sort(key=lambda x: x.get("TimestampIST", ""))
+    # Always sort properly by datetime
+    filtered_entities.sort(key=lambda x: parse_dt(x.get("TimestampIST")))
 
     if not filtered_entities:
         return {
@@ -1663,7 +1674,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "last_record_consumption": 0
         }
 
-    # Build raw records
+    # Build raw/snapshot records
     raw_records = []
 
     for entity in filtered_entities:
@@ -1707,6 +1718,10 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             outlet_value = get_float(entity, config["outlet_col"])
             total_consumption = get_float(entity, config["total_col"])
 
+            # fallback if total_col missing/zero but inlet-outlet exists
+            if total_consumption == 0 and (inlet_value != 0 or outlet_value != 0):
+                total_consumption = inlet_value - outlet_value
+
             record = {
                 "Timestamp": ts,
                 "Interval": interval_key,
@@ -1724,90 +1739,26 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
 
         raw_records.append(record)
 
-    # If raw interval requested, use records directly
+    # RAW interval = actual rows
     if interval == "raw":
         records = raw_records
+
     else:
+        # SCADA-style grouped output:
+        # keep only the LAST record in each interval
         grouped = {}
 
         for record in raw_records:
             key = record["Interval"]
+            grouped[key] = record  # overwrite -> last record of interval remains
 
-            if key not in grouped:
-                grouped[key] = {
-                    "Timestamp": record["Timestamp"],
-                    "Interval": key,
-                    "EngineType": engine_type,
-                    "EngineName": config["name"],
-                    "RecordCount": 0,
-                    "Inlet": 0,
-                    "Outlet": 0,
-                    "TotalConsumption": 0,
-                    "InletTemp": 0,
-                    "OutletTemp": 0,
-                    "InletDensity": 0,
-                    "OutletDensity": 0,
-                    "Consumption": 0
-                }
-
-                if engine_type == "TOTAL":
-                    grouped[key]["ME1"] = 0
-                    grouped[key]["ME2"] = 0
-                    grouped[key]["AE1"] = 0
-                    grouped[key]["AE2"] = 0
-                    grouped[key]["AE3"] = 0
-                    grouped[key]["AE4"] = 0
-
-            grouped[key]["RecordCount"] += 1
-            grouped[key]["Inlet"] += record.get("Inlet", 0)
-            grouped[key]["Outlet"] += record.get("Outlet", 0)
-            grouped[key]["TotalConsumption"] += record.get("TotalConsumption", 0)
-            grouped[key]["InletTemp"] += record.get("InletTemp", 0)
-            grouped[key]["OutletTemp"] += record.get("OutletTemp", 0)
-            grouped[key]["InletDensity"] += record.get("InletDensity", 0)
-            grouped[key]["OutletDensity"] += record.get("OutletDensity", 0)
-            grouped[key]["Consumption"] += record.get("Consumption", 0)
-
-            if engine_type == "TOTAL":
-                grouped[key]["ME1"] += record.get("ME1", 0)
-                grouped[key]["ME2"] += record.get("ME2", 0)
-                grouped[key]["AE1"] += record.get("AE1", 0)
-                grouped[key]["AE2"] += record.get("AE2", 0)
-                grouped[key]["AE3"] += record.get("AE3", 0)
-                grouped[key]["AE4"] += record.get("AE4", 0)
-
-        records = []
-
-        for _, group in grouped.items():
-            count = group["RecordCount"]
-
-            if engine_type == "TOTAL":
-                group["ME1"] = round(group["ME1"], 5)
-                group["ME2"] = round(group["ME2"], 5)
-                group["AE1"] = round(group["AE1"], 5)
-                group["AE2"] = round(group["AE2"], 5)
-                group["AE3"] = round(group["AE3"], 5)
-                group["AE4"] = round(group["AE4"], 5)
-                group["TotalConsumption"] = round(group["TotalConsumption"], 5)
-                group["Consumption"] = round(group["Consumption"], 5)
-            else:
-                group["Inlet"] = round(group["Inlet"], 5)
-                group["Outlet"] = round(group["Outlet"], 5)
-                group["TotalConsumption"] = round(group["TotalConsumption"], 5)
-                group["InletTemp"] = round(group["InletTemp"] / count, 2) if count else 0
-                group["OutletTemp"] = round(group["OutletTemp"] / count, 2) if count else 0
-                group["InletDensity"] = round(group["InletDensity"] / count, 2) if count else 0
-                group["OutletDensity"] = round(group["OutletDensity"] / count, 2) if count else 0
-                group["Consumption"] = round(group["TotalConsumption"], 5)
-
-            records.append(group)
-
+        records = list(grouped.values())
         records.sort(key=lambda x: x["Timestamp"])
 
-    total_consumption = sum(r.get("Consumption", 0) for r in records)
+    total_consumption = sum(r.get("Consumption", 0) for r in records if not math.isnan(r.get("Consumption", 0)))
     avg_consumption = total_consumption / len(records) if records else 0
 
-    # Difference based on selected first and last record
+    # Selected range difference uses first and last selected record totals
     first_record_consumption = float(records[0].get("Consumption", 0) or 0) if records else 0
     last_record_consumption = float(records[-1].get("Consumption", 0) or 0) if records else 0
     selected_range_difference = round(last_record_consumption - first_record_consumption, 5)
@@ -1825,6 +1776,314 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
         "first_record_consumption": round(first_record_consumption, 5),
         "last_record_consumption": round(last_record_consumption, 5)
     }
+
+# def fetch_engine_consumption(engine_type, start, end, interval="hour"):
+#     deviceid = "susanad"
+
+#     engine_config = {
+#         "PME": {
+#             "name": "PME Main Engine (P)",
+#             "inlet_col": "FT1Volumetotal",
+#             "outlet_col": "FT2Volumetotal",
+#             "total_col": "ME1Volumetotal",
+#             "inlet_temp_col": "FT1Temp",
+#             "outlet_temp_col": "FT2Temp",
+#             "inlet_density_col": "FT1Density",
+#             "outlet_density_col": "FT2Density",
+#             "formula": "ME1VolumeTotal"
+#         },
+#         "SME": {
+#             "name": "SME Main Engine (S)",
+#             "inlet_col": "FT3Volumetotal",
+#             "outlet_col": "FT4Volumetotal",
+#             "total_col": "ME2Volumetotal",
+#             "inlet_temp_col": "FT3Temp",
+#             "outlet_temp_col": "FT4Temp",
+#             "inlet_density_col": "FT3Density",
+#             "outlet_density_col": "FT4Density",
+#             "formula": "ME2VolumeTotal"
+#         },
+#         "AE1": {
+#             "name": "AE1 Auxiliary Engine 1",
+#             "inlet_col": "FT5Volumetotal",
+#             "outlet_col": "FT6Volumetotal",
+#             "total_col": "AE1Volumetotal",
+#             "inlet_temp_col": "FT5Temp",
+#             "outlet_temp_col": "FT6Temp",
+#             "inlet_density_col": "FT5Density",
+#             "outlet_density_col": "FT6Density",
+#             "formula": "AE1VolumeTotal"
+#         },
+#         "AE2": {
+#             "name": "AE2 Auxiliary Engine 2",
+#             "inlet_col": "FT7Volumetotal",
+#             "outlet_col": "FT8Volumetotal",
+#             "total_col": "AE2Volumetotal",
+#             "inlet_temp_col": "FT7Temp",
+#             "outlet_temp_col": "FT8Temp",
+#             "inlet_density_col": "FT7Density",
+#             "outlet_density_col": "FT8Density",
+#             "formula": "AE2VolumeTotal"
+#         },
+#         "AE3": {
+#             "name": "AE3 Auxiliary Engine 3",
+#             "inlet_col": "FT9Volumetotal",
+#             "outlet_col": "FT10Volumetotal",
+#             "total_col": "AE3Volumetotal",
+#             "inlet_temp_col": "FT9Temp",
+#             "outlet_temp_col": "FT10Temp",
+#             "inlet_density_col": "FT9Density",
+#             "outlet_density_col": "FT10Density",
+#             "formula": "AE3VolumeTotal"
+#         },
+#         "AE4": {
+#             "name": "AE4 Auxiliary Engine 4",
+#             "inlet_col": "FT11Volumetotal",
+#             "outlet_col": "FT12Volumetotal",
+#             "total_col": "AE4Volumetotal",
+#             "inlet_temp_col": "FT11Temp",
+#             "outlet_temp_col": "FT12Temp",
+#             "inlet_density_col": "FT11Density",
+#             "outlet_density_col": "FT12Density",
+#             "formula": "AE4VolumeTotal"
+#         },
+#         "TOTAL": {
+#             "name": "TOTAL Consumption",
+#             "formula": "ME1 + ME2 + AE1 + AE2 + AE3 + AE4"
+#         }
+#     }
+
+#     if engine_type not in engine_config:
+#         return None
+
+#     config = engine_config[engine_type]
+
+#     try:
+#         start_dt = parse_dt(start)
+#         end_dt = parse_dt(end)
+#     except Exception as e:
+#         print(f"Date parsing error: {e}")
+#         return None
+
+#     def get_float(row, key):
+#         try:
+#             return float(row.get(key, 0) or 0)
+#         except Exception:
+#             return 0.0
+
+#     def get_interval_key(dt, raw_ts):
+#         if interval == "minute":
+#             return dt.strftime("%Y-%m-%d %H:%M")
+#         elif interval == "hour":
+#             return dt.strftime("%Y-%m-%d %H:00")
+#         elif interval == "daily":
+#             return dt.strftime("%Y-%m-%d")
+#         elif interval == "monthly":
+#             return dt.strftime("%Y-%m")
+#         elif interval == "yearly":
+#             return dt.strftime("%Y")
+#         elif interval == "raw":
+#             return raw_ts
+#         else:
+#             return raw_ts
+
+#     # Query all rows for device
+#     query = f"PartitionKey eq '{deviceid}'"
+#     entities = list(table_client.query_entities(query))
+
+#     # Filter by selected time range
+#     filtered_entities = []
+#     for entity in entities:
+#         ts = entity.get("TimestampIST")
+#         if not ts:
+#             continue
+
+#         try:
+#             ts_dt = parse_dt(ts)
+#             if start_dt <= ts_dt <= end_dt:
+#                 filtered_entities.append(entity)
+#         except Exception:
+#             continue
+
+#     filtered_entities.sort(key=lambda x: x.get("TimestampIST", ""))
+
+#     if not filtered_entities:
+#         return {
+#             "engine_type": engine_type,
+#             "name": config["name"],
+#             "formula": config["formula"],
+#             "records": [],
+#             "total_consumption": 0,
+#             "avg_consumption": 0,
+#             "record_count": 0,
+#             "interval": interval,
+#             "selected_range_difference": 0,
+#             "first_record_consumption": 0,
+#             "last_record_consumption": 0
+#         }
+
+#     # Build raw records
+#     raw_records = []
+
+#     for entity in filtered_entities:
+#         ts = entity.get("TimestampIST")
+#         ts_dt = parse_dt(ts)
+#         interval_key = get_interval_key(ts_dt, ts)
+
+#         if engine_type == "TOTAL":
+#             me1 = get_float(entity, "ME1Volumetotal")
+#             me2 = get_float(entity, "ME2Volumetotal")
+#             ae1 = get_float(entity, "AE1Volumetotal")
+#             ae2 = get_float(entity, "AE2Volumetotal")
+#             ae3 = get_float(entity, "AE3Volumetotal")
+#             ae4 = get_float(entity, "AE4Volumetotal")
+
+#             total_consumption = me1 + me2 + ae1 + ae2 + ae3 + ae4
+
+#             record = {
+#                 "Timestamp": ts,
+#                 "Interval": interval_key,
+#                 "EngineType": engine_type,
+#                 "EngineName": config["name"],
+#                 "ME1": round(me1, 5),
+#                 "ME2": round(me2, 5),
+#                 "AE1": round(ae1, 5),
+#                 "AE2": round(ae2, 5),
+#                 "AE3": round(ae3, 5),
+#                 "AE4": round(ae4, 5),
+#                 "Inlet": 0,
+#                 "Outlet": 0,
+#                 "TotalConsumption": round(total_consumption, 5),
+#                 "InletTemp": 0,
+#                 "OutletTemp": 0,
+#                 "InletDensity": 0,
+#                 "OutletDensity": 0,
+#                 "Consumption": round(total_consumption, 5)
+#             }
+
+#         else:
+#             inlet_value = get_float(entity, config["inlet_col"])
+#             outlet_value = get_float(entity, config["outlet_col"])
+#             total_consumption = get_float(entity, config["total_col"])
+
+#             record = {
+#                 "Timestamp": ts,
+#                 "Interval": interval_key,
+#                 "EngineType": engine_type,
+#                 "EngineName": config["name"],
+#                 "Inlet": round(inlet_value, 5),
+#                 "Outlet": round(outlet_value, 5),
+#                 "TotalConsumption": round(total_consumption, 5),
+#                 "InletTemp": round(get_float(entity, config["inlet_temp_col"]), 2),
+#                 "OutletTemp": round(get_float(entity, config["outlet_temp_col"]), 2),
+#                 "InletDensity": round(get_float(entity, config["inlet_density_col"]), 2),
+#                 "OutletDensity": round(get_float(entity, config["outlet_density_col"]), 2),
+#                 "Consumption": round(total_consumption, 5)
+#             }
+
+#         raw_records.append(record)
+
+#     # If raw interval requested, use records directly
+#     if interval == "raw":
+#         records = raw_records
+#     else:
+#         grouped = {}
+
+#         for record in raw_records:
+#             key = record["Interval"]
+
+#             if key not in grouped:
+#                 grouped[key] = {
+#                     "Timestamp": record["Timestamp"],
+#                     "Interval": key,
+#                     "EngineType": engine_type,
+#                     "EngineName": config["name"],
+#                     "RecordCount": 0,
+#                     "Inlet": 0,
+#                     "Outlet": 0,
+#                     "TotalConsumption": 0,
+#                     "InletTemp": 0,
+#                     "OutletTemp": 0,
+#                     "InletDensity": 0,
+#                     "OutletDensity": 0,
+#                     "Consumption": 0
+#                 }
+
+#                 if engine_type == "TOTAL":
+#                     grouped[key]["ME1"] = 0
+#                     grouped[key]["ME2"] = 0
+#                     grouped[key]["AE1"] = 0
+#                     grouped[key]["AE2"] = 0
+#                     grouped[key]["AE3"] = 0
+#                     grouped[key]["AE4"] = 0
+
+#             grouped[key]["RecordCount"] += 1
+#             grouped[key]["Inlet"] += record.get("Inlet", 0)
+#             grouped[key]["Outlet"] += record.get("Outlet", 0)
+#             grouped[key]["TotalConsumption"] += record.get("TotalConsumption", 0)
+#             grouped[key]["InletTemp"] += record.get("InletTemp", 0)
+#             grouped[key]["OutletTemp"] += record.get("OutletTemp", 0)
+#             grouped[key]["InletDensity"] += record.get("InletDensity", 0)
+#             grouped[key]["OutletDensity"] += record.get("OutletDensity", 0)
+#             grouped[key]["Consumption"] += record.get("Consumption", 0)
+
+#             if engine_type == "TOTAL":
+#                 grouped[key]["ME1"] += record.get("ME1", 0)
+#                 grouped[key]["ME2"] += record.get("ME2", 0)
+#                 grouped[key]["AE1"] += record.get("AE1", 0)
+#                 grouped[key]["AE2"] += record.get("AE2", 0)
+#                 grouped[key]["AE3"] += record.get("AE3", 0)
+#                 grouped[key]["AE4"] += record.get("AE4", 0)
+
+#         records = []
+
+#         for _, group in grouped.items():
+#             count = group["RecordCount"]
+
+#             if engine_type == "TOTAL":
+#                 group["ME1"] = round(group["ME1"], 5)
+#                 group["ME2"] = round(group["ME2"], 5)
+#                 group["AE1"] = round(group["AE1"], 5)
+#                 group["AE2"] = round(group["AE2"], 5)
+#                 group["AE3"] = round(group["AE3"], 5)
+#                 group["AE4"] = round(group["AE4"], 5)
+#                 group["TotalConsumption"] = round(group["TotalConsumption"], 5)
+#                 group["Consumption"] = round(group["Consumption"], 5)
+#             else:
+#                 group["Inlet"] = round(group["Inlet"], 5)
+#                 group["Outlet"] = round(group["Outlet"], 5)
+#                 group["TotalConsumption"] = round(group["TotalConsumption"], 5)
+#                 group["InletTemp"] = round(group["InletTemp"] / count, 2) if count else 0
+#                 group["OutletTemp"] = round(group["OutletTemp"] / count, 2) if count else 0
+#                 group["InletDensity"] = round(group["InletDensity"] / count, 2) if count else 0
+#                 group["OutletDensity"] = round(group["OutletDensity"] / count, 2) if count else 0
+#                 group["Consumption"] = round(group["TotalConsumption"], 5)
+
+#             records.append(group)
+
+#         records.sort(key=lambda x: x["Timestamp"])
+
+#     total_consumption = sum(r.get("Consumption", 0) for r in records)
+#     avg_consumption = total_consumption / len(records) if records else 0
+
+#     # Difference based on selected first and last record
+#     first_record_consumption = float(records[0].get("Consumption", 0) or 0) if records else 0
+#     last_record_consumption = float(records[-1].get("Consumption", 0) or 0) if records else 0
+#     selected_range_difference = round(last_record_consumption - first_record_consumption, 5)
+
+#     return {
+#         "engine_type": engine_type,
+#         "name": config["name"],
+#         "formula": config["formula"],
+#         "records": records,
+#         "total_consumption": round(total_consumption, 5),
+#         "avg_consumption": round(avg_consumption, 5),
+#         "record_count": len(records),
+#         "interval": interval,
+#         "selected_range_difference": selected_range_difference,
+#         "first_record_consumption": round(first_record_consumption, 5),
+#         "last_record_consumption": round(last_record_consumption, 5)
+#     }
 
 
 @app.route("/download_pdf")
