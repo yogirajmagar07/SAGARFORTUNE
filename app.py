@@ -10,7 +10,7 @@ from reportlab.lib.pagesizes import letter
 import json
 from functools import wraps
 from io import BytesIO
-from math import ceil
+from math import ceil, abs
 from flask import request, jsonify, send_file
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.pdfgen import canvas
@@ -624,10 +624,10 @@ def api_readings():
             main_engine_1_total = totals["PME"] / 1000
             main_engine_2_total = totals["SME"] / 1000
 
-            generator_1_total = totals["AE1"] / 1000
-            generator_2_total = totals["AE2"] / 1000
-            generator_3_total = totals["AE3"] / 1000
-            generator_4_total = totals["AE4"] / 1000
+            generator_1_total = abs(totals["AE1"] / 1000)
+            generator_2_total = abs(totals["AE2"] / 1000)
+            generator_3_total = abs(totals["AE3"] / 1000)
+            generator_4_total = abs(totals["AE4"] / 1000)
 
             total_main_engines = (
                 main_engine_1_total +
