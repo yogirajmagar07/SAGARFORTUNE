@@ -465,7 +465,7 @@ def api_readings():
             return 0.0
             
     def format_iso_2ms(dt):
-        return dt.strftime("%Y-%m-%dT%H:%M:%S") + ".00Z
+        return dt.strftime("%Y-%m-%dT%H:%M:%S") + ".00Z"
 
 
     def parse_azure_time(ts):
