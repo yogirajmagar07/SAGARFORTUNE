@@ -10,7 +10,7 @@ from reportlab.lib.pagesizes import letter
 import json
 from functools import wraps
 from io import BytesIO
-from math import ceil, abs
+from math import *
 from flask import request, jsonify, send_file
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.pdfgen import canvas
