@@ -463,6 +463,10 @@ def api_readings():
             return float(row.get(key, 0) or 0)
         except Exception:
             return 0.0
+            
+    def format_iso_2ms(dt):
+        return dt.strftime("%Y-%m-%dT%H:%M:%S") + ".00Z
+
 
     def parse_azure_time(ts):
 
@@ -738,13 +742,11 @@ def api_readings():
     response_data = {
 
         "requestWindow": {
-            "fromTime":
-                start_dt.strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ"
+            "fromTime":format_iso_2ms(
+                start_dt
                 ),
-            "toTime":
-                end_dt.strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ"
+            "toTime":format_iso_2ms(
+                end_dt
                 ),
             "timezone": "UTC"
         },
