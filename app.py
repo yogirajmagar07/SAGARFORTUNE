@@ -373,378 +373,13 @@ def latest():
 #         mimetype="application/json"
 #     )
 
-# @app.route("/API")
-# @api_key_required
-# def api_readings():
-
-#     from_time = request.args.get("fromTime")
-#     to_time = request.args.get("toTime")
-
-#     deviceid = "susanad"
-
-#     if not from_time or not to_time:
-#         return jsonify({
-#             "error": "fromTime and toTime required"
-#         }), 400
-
-#     # ==================================================
-#     # Parse request timestamps
-#     # Supports:
-#     # 2026-06-23T00:00:00Z
-#     # 2026-06-23T00:00:00.00Z
-#     # ==================================================
-
-#     def parse_request_time(value):
-
-#         formats = [
-#             "%Y-%m-%dT%H:%M:%SZ",
-#             "%Y-%m-%dT%H:%M:%S.%fZ"
-#         ]
-
-#         for fmt in formats:
-#             try:
-#                 return datetime.strptime(value, fmt)
-#             except Exception:
-#                 pass
-
-#         raise ValueError("Invalid datetime format")
-
-#     try:
-
-#         start_dt = parse_request_time(from_time)
-#         end_dt = parse_request_time(to_time)
-
-#         if end_dt <= start_dt:
-#             return jsonify({
-#                 "error": "toTime must be greater than fromTime"
-#             }), 400
-
-#     except Exception:
-#         return jsonify({
-#             "error":
-#             "Invalid datetime format. Supported formats: "
-#             "YYYY-MM-DDTHH:MM:SSZ "
-#             "or "
-#             "YYYY-MM-DDTHH:MM:SS.sssZ"
-#         }), 400
-
-#     # ==================================================
-#     # Azure Date Format
-#     # ==================================================
-
-#     azure_from_time = start_dt.strftime("%Y-%m-%d %H:%M:%S")
-#     azure_to_time = end_dt.strftime("%Y-%m-%d %H:%M:%S")
-
-#     # ==================================================
-#     # Helpers
-#     # ==================================================
-
-#     def get_float(row, key):
-
-#         try:
-#             return float(row.get(key, 0) or 0)
-#         except Exception:
-#             return 0.0
-
-#     def parse_azure_time(ts):
-
-#         for fmt in (
-#             "%Y-%m-%d %H:%M:%S",
-#             "%Y-%m-%dT%H:%M:%SZ"
-#         ):
-#             try:
-#                 return datetime.strptime(ts, fmt)
-#             except Exception:
-#                 pass
-
-#         return None
-
-#     # ==================================================
-#     # Engine Config
-#     # ==================================================
-
-#     engine_config = {
-
-#         "PME": {
-#             "name": "Main Engine 1",
-#             "total_col": "ME1Volumetotal",
-#             "inlet_col": "FT1Volumetotal",
-#             "outlet_col": "FT2Volumetotal"
-#         },
-
-#         "SME": {
-#             "name": "Main Engine 2",
-#             "total_col": "ME2Volumetotal",
-#             "inlet_col": "FT3Volumetotal",
-#             "outlet_col": "FT4Volumetotal"
-#         },
-
-#         "AE1": {
-#             "name": "Generator 1",
-#             "total_col": "AE1Volumetotal",
-#             "inlet_col": "FT5Volumetotal",
-#             "outlet_col": "FT6Volumetotal"
-#         },
-
-#         "AE2": {
-#             "name": "Generator 2",
-#             "total_col": "AE2Volumetotal",
-#             "inlet_col": "FT7Volumetotal",
-#             "outlet_col": "FT8Volumetotal"
-#         },
-
-#         "AE3": {
-#             "name": "Generator 3",
-#             "total_col": "AE3Volumetotal",
-#             "inlet_col": "FT9Volumetotal",
-#             "outlet_col": "FT10Volumetotal"
-#         },
-
-#         "AE4": {
-#             "name": "Generator 4",
-#             "total_col": "AE4Volumetotal",
-#             "inlet_col": "FT11Volumetotal",
-#             "outlet_col": "FT12Volumetotal"
-#         }
-#     }
-
-#     readings = []
-
-#     try:
-
-#         query = (
-#             f"PartitionKey eq '{deviceid}' "
-#             f"and TimestampIST ge '{azure_from_time}' "
-#             f"and TimestampIST le '{azure_to_time}'"
-#         )
-
-#         entities = list(
-#             table_client.query_entities(query)
-#         )
-
-#         print(f"API Records Found = {len(entities)}")
-
-#         current_start = start_dt
-
-#         # ==================================================
-#         # Generate hourly blocks
-#         # ==================================================
-
-#         while current_start < end_dt:
-
-#             current_end = min(
-#                 current_start + timedelta(hours=1),
-#                 end_dt
-#             )
-
-#             totals = {
-#                 "PME": 0.0,
-#                 "SME": 0.0,
-#                 "AE1": 0.0,
-#                 "AE2": 0.0,
-#                 "AE3": 0.0,
-#                 "AE4": 0.0
-#             }
-
-#             for entity in entities:
-
-#                 ts = entity.get("TimestampIST")
-
-#                 if not ts:
-#                     continue
-
-#                 ts_dt = parse_azure_time(ts)
-
-#                 if not ts_dt:
-#                     continue
-
-#                 # ==========================================
-#                 # Strict UTC window validation
-#                 # ==========================================
-
-#                 if not (
-#                     start_dt <= ts_dt < end_dt
-#                 ):
-#                     continue
-
-#                 if not (
-#                     current_start <= ts_dt < current_end
-#                 ):
-#                     continue
-
-#                 for engine_key, cfg in engine_config.items():
-
-#                     total_value = get_float(
-#                         entity,
-#                         cfg["total_col"]
-#                     )
-
-#                     # fallback
-#                     if total_value == 0:
-
-#                         inlet_value = get_float(
-#                             entity,
-#                             cfg["inlet_col"]
-#                         )
-
-#                         outlet_value = get_float(
-#                             entity,
-#                             cfg["outlet_col"]
-#                         )
-
-#                         total_value = (
-#                             inlet_value -
-#                             outlet_value
-#                         )
-
-#                     totals[engine_key] += total_value
-
-#             # ==========================================
-#             # Convert Litres -> kL
-#             # ==========================================
-
-#             main_engine_1_total = totals["PME"] / 1000
-#             main_engine_2_total = totals["SME"] / 1000
-
-#             generator_1_total = totals["AE1"] / 1000
-#             generator_2_total = totals["AE2"] / 1000
-#             generator_3_total = totals["AE3"] / 1000
-#             generator_4_total = totals["AE4"] / 1000
-
-#             total_main_engines = (
-#                 main_engine_1_total +
-#                 main_engine_2_total
-#             )
-
-#             total_generators = (
-#                 generator_1_total +
-#                 generator_2_total +
-#                 generator_3_total +
-#                 generator_4_total
-#             )
-
-#             readings.append({
-
-#                 "measurementStartTime":
-#                     current_start.strftime(
-#                         "%Y-%m-%dT%H:%M:%SZ"
-#                     ),
-
-#                 "measurementEndTime":
-#                     (
-#                         current_end -
-#                         timedelta(seconds=1)
-#                     ).strftime(
-#                         "%Y-%m-%dT%H:%M:%SZ"
-#                     ),
-
-#                 "kind": "VESSEL",
-#                 "mmsi": "419001287",
-#                 "imo": "9458327",
-
-#                 "consumption": {
-
-#                     "unit": "kL/hr",
-
-#                     "mainEnginesTotal":
-#                         round(total_main_engines, 8),
-
-#                     "generatorsTotal":
-#                         round(total_generators, 8),
-
-#                     "totalConsumption":
-#                         round(
-#                             total_main_engines +
-#                             total_generators,
-#                             8
-#                         ),
-
-#                     "mainEngines": [
-#                         {
-#                             "name": "Main Engine 1",
-#                             "value": round(
-#                                 main_engine_1_total,
-#                                 8
-#                             )
-#                         },
-#                         {
-#                             "name": "Main Engine 2",
-#                             "value": round(
-#                                 main_engine_2_total,
-#                                 8
-#                             )
-#                         }
-#                     ],
-
-#                     "generators": [
-#                         {
-#                             "name": "Generator 1",
-#                             "value": round(
-#                                 generator_1_total,
-#                                 8
-#                             )
-#                         },
-#                         {
-#                             "name": "Generator 2",
-#                             "value": round(
-#                                 generator_2_total,
-#                                 8
-#                             )
-#                         },
-#                         {
-#                             "name": "Generator 3",
-#                             "value": round(
-#                                 generator_3_total,
-#                                 8
-#                             )
-#                         },
-#                         {
-#                             "name": "Generator 4",
-#                             "value": round(
-#                                 generator_4_total,
-#                                 8
-#                             )
-#                         }
-#                     ]
-#                 }
-#             })
-
-#             current_start = current_end
-
-#     except Exception as e:
-
-#         return jsonify({
-#             "error": str(e)
-#         }), 500
-
-#     response_data = {
-
-#         "requestWindow": {
-#             "fromTime":
-#                 start_dt.strftime(
-#                     "%Y-%m-%dT%H:%M:%SZ"
-#                 ),
-#             "toTime":
-#                 end_dt.strftime(
-#                     "%Y-%m-%dT%H:%M:%SZ"
-#                 ),
-#             "timezone": "UTC"
-#         },
-
-#         "readings": readings
-#     }
-
-#     return Response(
-#         json.dumps(response_data, indent=4),
-#         mimetype="application/json"
-#     )
-
 @app.route("/API")
 @api_key_required
 def api_readings():
 
     from_time = request.args.get("fromTime")
     to_time = request.args.get("toTime")
+
     deviceid = "susanad"
 
     if not from_time or not to_time:
@@ -752,9 +387,12 @@ def api_readings():
             "error": "fromTime and toTime required"
         }), 400
 
-    # ===================================
-    # Timestamp parser
-    # ===================================
+    # ==================================================
+    # Parse request timestamps
+    # Supports:
+    # 2026-06-23T00:00:00Z
+    # 2026-06-23T00:00:00.00Z
+    # ==================================================
 
     def parse_request_time(value):
 
@@ -769,7 +407,7 @@ def api_readings():
             except Exception:
                 pass
 
-        raise ValueError("Invalid timestamp")
+        raise ValueError("Invalid datetime format")
 
     try:
 
@@ -780,26 +418,44 @@ def api_readings():
             return jsonify({
                 "error": "toTime must be greater than fromTime"
             }), 400
+        max_end_dt = start_dt + timedelta(hours=24)
+        if end_dt > max_end_dt:
+            print(
+                f"Requested window exceeds 24 hours. "
+                 f"Clamping end time from {end_dt} to {max_end_dt}"
+            )
+            end_dt = max_end_dt
+
+    # ==================================================
+    # Restrict request window to maximum 24 hours
+    # Example:
+    # fromTime=2026-06-23T00:00:00Z
+    # toTime=2026-06-24T01:00:00Z
+    #
+    # Internally becomes:
+    # toTime=2026-06-24T00:00:00Z
+    # ==================================================
+
 
     except Exception:
-
         return jsonify({
             "error":
-            "Invalid datetime format. "
-            "Use YYYY-MM-DDTHH:MM:SSZ "
-            "or YYYY-MM-DDTHH:MM:SS.sssZ"
+            "Invalid datetime format. Supported formats: "
+            "YYYY-MM-DDTHH:MM:SSZ "
+            "or "
+            "YYYY-MM-DDTHH:MM:SS.sssZ"
         }), 400
 
-    # ===================================
-    # Convert request time to Azure format
-    # ===================================
+    # ==================================================
+    # Azure Date Format
+    # ==================================================
 
     azure_from_time = start_dt.strftime("%Y-%m-%d %H:%M:%S")
     azure_to_time = end_dt.strftime("%Y-%m-%d %H:%M:%S")
 
-    # ===================================
+    # ==================================================
     # Helpers
-    # ===================================
+    # ==================================================
 
     def get_float(row, key):
 
@@ -817,13 +473,13 @@ def api_readings():
             try:
                 return datetime.strptime(ts, fmt)
             except Exception:
-                continue
+                pass
 
         return None
 
-    # ===================================
-    # Engine Mapping
-    # ===================================
+    # ==================================================
+    # Engine Config
+    # ==================================================
 
     engine_config = {
 
@@ -888,9 +544,9 @@ def api_readings():
 
         current_start = start_dt
 
-        # ===================================
-        # Generate hourly readings
-        # ===================================
+        # ==================================================
+        # Generate hourly blocks
+        # ==================================================
 
         while current_start < end_dt:
 
@@ -908,10 +564,6 @@ def api_readings():
                 "AE4": 0.0
             }
 
-            # ===================================
-            # Process records
-            # ===================================
-
             for entity in entities:
 
                 ts = entity.get("TimestampIST")
@@ -924,18 +576,18 @@ def api_readings():
                 if not ts_dt:
                     continue
 
-                # ===================================
-                # STRICT REQUEST WINDOW
-                # ===================================
+                # ==========================================
+                # Strict UTC window validation
+                # ==========================================
 
-                if not (start_dt <= ts_dt < end_dt):
+                if not (
+                    start_dt <= ts_dt < end_dt
+                ):
                     continue
 
-                # ===================================
-                # STRICT CURRENT HOUR WINDOW
-                # ===================================
-
-                if not (current_start <= ts_dt < current_end):
+                if not (
+                    current_start <= ts_dt < current_end
+                ):
                     continue
 
                 for engine_key, cfg in engine_config.items():
@@ -965,17 +617,17 @@ def api_readings():
 
                     totals[engine_key] += total_value
 
-            # ===================================
-            # Totals
-            # ===================================
+            # ==========================================
+            # Convert Litres -> kL
+            # ==========================================
 
-            main_engine_1_total = totals["PME"]
-            main_engine_2_total = totals["SME"]
+            main_engine_1_total = totals["PME"] / 1000
+            main_engine_2_total = totals["SME"] / 1000
 
-            generator_1_total = totals["AE1"]
-            generator_2_total = totals["AE2"]
-            generator_3_total = totals["AE3"]
-            generator_4_total = totals["AE4"]
+            generator_1_total = totals["AE1"] / 1000
+            generator_2_total = totals["AE2"] / 1000
+            generator_3_total = totals["AE3"] / 1000
+            generator_4_total = totals["AE4"] / 1000
 
             total_main_engines = (
                 main_engine_1_total +
@@ -1005,12 +657,12 @@ def api_readings():
                     ),
 
                 "kind": "VESSEL",
-
                 "mmsi": "419001287",
-
                 "imo": "9458327",
 
                 "consumption": {
+
+                    "unit": "kL/hr",
 
                     "mainEnginesTotal":
                         round(total_main_engines, 8),
@@ -1028,30 +680,48 @@ def api_readings():
                     "mainEngines": [
                         {
                             "name": "Main Engine 1",
-                            "value": round(main_engine_1_total, 8)
+                            "value": round(
+                                main_engine_1_total,
+                                8
+                            )
                         },
                         {
                             "name": "Main Engine 2",
-                            "value": round(main_engine_2_total, 8)
+                            "value": round(
+                                main_engine_2_total,
+                                8
+                            )
                         }
                     ],
 
                     "generators": [
                         {
                             "name": "Generator 1",
-                            "value": round(generator_1_total, 8)
+                            "value": round(
+                                generator_1_total,
+                                8
+                            )
                         },
                         {
                             "name": "Generator 2",
-                            "value": round(generator_2_total, 8)
+                            "value": round(
+                                generator_2_total,
+                                8
+                            )
                         },
                         {
                             "name": "Generator 3",
-                            "value": round(generator_3_total, 8)
+                            "value": round(
+                                generator_3_total,
+                                8
+                            )
                         },
                         {
                             "name": "Generator 4",
-                            "value": round(generator_4_total, 8)
+                            "value": round(
+                                generator_4_total,
+                                8
+                            )
                         }
                     ]
                 }
@@ -1069,9 +739,13 @@ def api_readings():
 
         "requestWindow": {
             "fromTime":
-                start_dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                start_dt.strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
             "toTime":
-                end_dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                end_dt.strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
             "timezone": "UTC"
         },
 
@@ -1082,7 +756,6 @@ def api_readings():
         json.dumps(response_data, indent=4),
         mimetype="application/json"
     )
-
 
 # New logic
 
