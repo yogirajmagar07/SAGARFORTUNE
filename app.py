@@ -647,17 +647,12 @@ def api_readings():
 
             readings.append({
 
-                "measurementStartTime":
-                    current_start.strftime(
-                        "%Y-%m-%dT%H:%M:%S.%fZ"
+                "measurementStartTime":format_iso_2ms(
+                    current_start
                     ),
 
-                "measurementEndTime":
-                    (
-                        current_end -
-                        timedelta(seconds=1)
-                    ).strftime(
-                        "%Y-%m-%dT%H:%M:%S.%fZ"
+                "measurementEndTime":format_iso_2ms(
+                        current_end
                     ),
 
                 "kind": "VESSEL",
