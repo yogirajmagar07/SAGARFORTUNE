@@ -645,7 +645,7 @@ def api_readings():
 
                 "measurementStartTime":
                     current_start.strftime(
-                        "%Y-%m-%dT%H:%M:%SZ"
+                        "%Y-%m-%dT%H:%M:%S.%fZ"
                     ),
 
                 "measurementEndTime":
@@ -653,7 +653,7 @@ def api_readings():
                         current_end -
                         timedelta(seconds=1)
                     ).strftime(
-                        "%Y-%m-%dT%H:%M:%SZ"
+                        "%Y-%m-%dT%H:%M:%S.%fZ"
                     ),
 
                 "kind": "VESSEL",
@@ -740,11 +740,11 @@ def api_readings():
         "requestWindow": {
             "fromTime":
                 start_dt.strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
+                    "%Y-%m-%dT%H:%M:%S.%fZ"
                 ),
             "toTime":
                 end_dt.strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
+                    "%Y-%m-%dT%H:%M:%S.%fZ"
                 ),
             "timezone": "UTC"
         },
