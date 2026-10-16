@@ -23,7 +23,7 @@ app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 # Azure Table Config
 # =========================
 TABLES_CONN = os.environ.get("TABLES_CONNECTION_STRING")
-TABLE_NAME = os.environ.get("TABLE_NAME", "SAGARFORTUNE")
+TABLE_NAME = os.environ.get("TABLE_NAME", "SAGARFORTUNE1")
 
 service = TableServiceClient.from_connection_string(TABLES_CONN)
 table_client = service.get_table_client(TABLE_NAME)
