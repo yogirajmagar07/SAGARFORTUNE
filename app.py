@@ -2599,14 +2599,39 @@ from datetime import datetime
 from functools import wraps
 
 def parse_dt(value):
-    """Parse datetime string to datetime object"""
-    try:
-        return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-    except ValueError:
+    """
+    Parse report inputs and stored timestamps into a naive IST datetime.
+
+    TimestampIST is stored as a STRING in Azure Table Storage in the
+    sortable format YYYY-MM-DD HH:MM:SS. The report form/CSV may use
+    DD-MM-YYYY HH:MM[:SS], so both formats are accepted here.
+    """
+    if isinstance(value, datetime):
+        return value
+
+    value = str(value or "").strip()
+    if not value:
+        raise ValueError("Empty datetime value")
+
+    value = value.replace("T", " ").replace("Z", "").strip()
+    formats = (
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%d-%m-%Y %H:%M:%S",
+        "%d-%m-%Y %H:%M",
+        "%Y/%m/%d %H:%M:%S",
+        "%Y/%m/%d %H:%M",
+    )
+    for fmt in formats:
         try:
-            return datetime.strptime(value, "%Y-%m-%d %H:%M")
+            return datetime.strptime(value, fmt)
         except ValueError:
-            return datetime.strptime(value.replace('T', ' '), "%Y-%m-%d %H:%M")
+            continue
+
+    parsed = pd.to_datetime(value, errors="coerce", dayfirst=True)
+    if pd.isna(parsed):
+        raise ValueError(f"Unsupported datetime format: {value}")
+    return parsed.to_pydatetime().replace(tzinfo=None)
 
 # ========================
 # Fetch Engine Consumption
@@ -2621,8 +2646,10 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
       1. Historical rows from the archived CSV in Azure Blob Storage.
       2. New/live rows from the existing Azure Table Storage table.
 
-    Historical and live rows are merged, de-duplicated by RowKey, sorted by
-    TimestampIST, and then processed using the original report calculations.
+    Historical and live rows are appended without removing or deduplicating
+    any records. Both TimestampIST values are parsed into naive IST datetimes
+    for filtering and sorting; stored/exported timestamps use
+    YYYY-MM-DD HH:MM:SS, the string format used by this Azure Table.
     """
     engine_config = {
         "PME": {
@@ -2741,16 +2768,19 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             return 0.0
 
     def parse_row_time(value):
-        if value is None:
+        if value is None or str(value).strip() == "":
             return None
         try:
-            return parse_dt(str(value).replace("T", " ")[:19])
+            return parse_dt(value)
         except Exception:
-            try:
-                parsed = pd.to_datetime(value, errors="coerce")
-                return None if pd.isna(parsed) else parsed.to_pydatetime().replace(tzinfo=None)
-            except Exception:
-                return None
+            return None
+
+    def azure_timestamp_string(value):
+        """Normalize any supported source timestamp to Azure's string format."""
+        parsed = parse_row_time(value)
+        if parsed is None:
+            return None
+        return parsed.strftime("%Y-%m-%d %H:%M:%S")
 
     def get_interval_key(dt, raw_ts):
         if interval == "minute":
@@ -2765,13 +2795,12 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             return dt.strftime("%Y")
         return raw_ts
 
-    # A dictionary keyed by RowKey prevents an archived row and its live-table
-    # copy from appearing twice if the archive overlaps the live period.
-    merged_rows = {}
+    # Keep every row exactly as received. No RowKey deduplication and no
+    # composite-key deduplication are performed.
+    merged_rows = []
     historical_count = 0
 
-    # ---- Historical CSV: streamed in chunks to avoid loading the 33 MB file
-    # into memory all at once.
+    # ---- Historical CSV: stream in chunks to avoid loading the full archive.
     if blob_service_client is not None:
         try:
             blob_client = blob_service_client.get_blob_client(
@@ -2802,79 +2831,74 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
                             str(HISTORICAL_PARTITION_KEY)
                         ]
 
+                    # CSV timestamps may be DD-MM-YYYY HH:MM. Parse explicitly
+                    # as day-first, then normalize to Azure's string format.
                     parsed_times = pd.to_datetime(
-                        chunk["TimestampIST"], errors="coerce"
+                        chunk["TimestampIST"].astype(str).str.strip(),
+                        errors="coerce",
+                        dayfirst=True
                     )
+
                     mask = (
                         parsed_times.notna() &
                         (parsed_times >= pd.Timestamp(start_dt)) &
                         (parsed_times <= pd.Timestamp(end_dt))
                     )
-                    selected = chunk.loc[mask]
 
-                    for row in selected.to_dict(orient="records"):
-                        row_key = str(row.get("RowKey") or "")
-                        timestamp = str(row.get("TimestampIST") or "")
-                        unique_key = row_key or f"CSV:{timestamp}:{len(merged_rows)}"
-                        if unique_key not in merged_rows:
-                            historical_count += 1
-                        merged_rows[unique_key] = row
+                    selected = chunk.loc[mask].copy()
+                    selected_times = parsed_times.loc[mask]
+
+                    for row, parsed_time in zip(
+                        selected.to_dict(orient="records"),
+                        selected_times
+                    ):
+                        row["TimestampIST"] = (
+                            parsed_time.to_pydatetime()
+                            .strftime("%Y-%m-%d %H:%M:%S")
+                        )
+                        merged_rows.append(row)
+                        historical_count += 1
 
             print(f"Historical CSV rows in range: {historical_count}")
         except Exception as exc:
-            # Do not silently produce an incomplete report if Blob Storage was
-            # configured but the archive could not be read.
-            raise RuntimeError(f"Could not read historical CSV from Azure Blob: {exc}")
+            raise RuntimeError(
+                f"Could not read historical CSV from Azure Blob: {exc}"
+            )
 
-    # ---- Live data: query only the selected device and time window.
+    # ---- Live Azure Table rows.
+    # TimestampIST is a STRING in this app (build_entity stores a string).
+    # Query by PartitionKey only, then parse/filter timestamps in Python.
+    # This avoids OData string-format mismatches and keeps all matching rows.
     live_device = LIVE_PARTITION_KEY.replace("'", "''")
-    from_text = start_dt.strftime("%Y-%m-%d %H:%M:%S")
-    to_text = end_dt.strftime("%Y-%m-%d %H:%M:%S")
-    # Filter Azure Table by PartitionKey only, then compare TimestampIST in
-    # Python. TimestampIST is stored as a string by build_entity(); applying
-    # OData ge/le to that custom property can return no rows on some table
-    # schemas/legacy entities even though the partition contains live data.
     live_query = f"PartitionKey eq '{live_device}'"
 
     live_count = 0
-    live_partition_rows = 0
-    live_latest_timestamp = None
-
     for entity in table_client.query_entities(query_filter=live_query):
-        live_partition_rows += 1
         row = dict(entity)
         ts_dt = parse_row_time(row.get("TimestampIST"))
-        if ts_dt is None:
+
+        if ts_dt is None or not (start_dt <= ts_dt <= end_dt):
             continue
 
-        if live_latest_timestamp is None or ts_dt > live_latest_timestamp:
-            live_latest_timestamp = ts_dt
-
-        if not (start_dt <= ts_dt <= end_dt):
-            continue
-
-        row_key = str(row.get("RowKey") or "")
-        unique_key = row_key or f"LIVE:{row.get('TimestampIST')}:{live_count}"
-        merged_rows[unique_key] = row
+        # Normalize live timestamp to the same sortable Azure string format.
+        row["TimestampIST"] = ts_dt.strftime("%Y-%m-%d %H:%M:%S")
+        merged_rows.append(row)
         live_count += 1
 
     print(
-        f"REPORT SOURCE DIAGNOSTICS | "
-        f"table={TABLE_NAME} | live_partition={LIVE_PARTITION_KEY} | "
-        f"partition_rows={live_partition_rows} | live_rows_in_range={live_count} | "
-        f"live_latest={live_latest_timestamp} | historical_rows_in_range={historical_count} | "
-        f"combined_unique_rows={len(merged_rows)}"
+        f"Report source counts: historical_rows={historical_count}; "
+        f"live_rows={live_count}; combined_rows={len(merged_rows)}"
     )
 
     filtered_entities = []
-    for row in merged_rows.values():
-        ts = row.get("TimestampIST")
-        ts_dt = parse_row_time(ts)
+    for row in merged_rows:
+        ts_dt = parse_row_time(row.get("TimestampIST"))
         if ts_dt is not None and start_dt <= ts_dt <= end_dt:
             row["_parsed_timestamp"] = ts_dt
             filtered_entities.append(row)
 
-    filtered_entities.sort(key=lambda row: (row["_parsed_timestamp"], str(row.get("RowKey", ""))))
+    # Stable sort only; duplicate timestamps/records are retained.
+    filtered_entities.sort(key=lambda row: row["_parsed_timestamp"])
 
     if not filtered_entities:
         return {
@@ -2889,7 +2913,7 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
             "selected_range_difference": 0,
             "first_record_consumption": 0,
             "last_record_consumption": 0,
-            "historical_record_count": 0,
+            "historical_record_count": historical_count,
             "live_record_count": live_count
         }
 
@@ -3072,20 +3096,12 @@ def download_pdf():
             320,
             f"Selected Range Difference (Last - First): {selected_range_difference}"
         )
-        c.drawString(
-            50, 295,
-            f"Historical CSV rows: {result.get('historical_record_count', 0)}"
-        )
-        c.drawString(
-            350, 295,
-            f"Live Azure Table rows: {result.get('live_record_count', 0)}"
-        )
 
         if records:
-            c.drawString(50, 270, f"First Reading Time: {records[0].get('Timestamp', '')}")
-            c.drawString(50, 250, f"Last Reading Time: {records[-1].get('Timestamp', '')}")
+            c.drawString(50, 290, f"First Reading Time: {records[0].get('Timestamp', '')}")
+            c.drawString(50, 270, f"Last Reading Time: {records[-1].get('Timestamp', '')}")
 
-        c.line(50, 225, 750, 225)
+        c.line(50, 240, 750, 240)
 
         # =====================
         # Detailed Data Pages
@@ -3731,6 +3747,27 @@ import io
 #     except Exception as e:
 #         print(f"PDF download error: {e}")
 #         return jsonify({"error": str(e)}), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
