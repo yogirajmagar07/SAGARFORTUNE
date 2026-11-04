@@ -1796,7 +1796,6 @@
 
 
 
-
 import os
 from datetime import datetime, timedelta
 import pytz
@@ -2831,26 +2830,40 @@ def fetch_engine_consumption(engine_type, start, end, interval="hour"):
     live_device = LIVE_PARTITION_KEY.replace("'", "''")
     from_text = start_dt.strftime("%Y-%m-%d %H:%M:%S")
     to_text = end_dt.strftime("%Y-%m-%d %H:%M:%S")
-    live_query = (
-        f"PartitionKey eq '{live_device}' "
-        f"and TimestampIST ge '{from_text}' "
-        f"and TimestampIST le '{to_text}'"
-    )
+    # Filter Azure Table by PartitionKey only, then compare TimestampIST in
+    # Python. TimestampIST is stored as a string by build_entity(); applying
+    # OData ge/le to that custom property can return no rows on some table
+    # schemas/legacy entities even though the partition contains live data.
+    live_query = f"PartitionKey eq '{live_device}'"
 
     live_count = 0
+    live_partition_rows = 0
+    live_latest_timestamp = None
+
     for entity in table_client.query_entities(query_filter=live_query):
+        live_partition_rows += 1
         row = dict(entity)
         ts_dt = parse_row_time(row.get("TimestampIST"))
-        if ts_dt is None or not (start_dt <= ts_dt <= end_dt):
+        if ts_dt is None:
             continue
+
+        if live_latest_timestamp is None or ts_dt > live_latest_timestamp:
+            live_latest_timestamp = ts_dt
+
+        if not (start_dt <= ts_dt <= end_dt):
+            continue
+
         row_key = str(row.get("RowKey") or "")
         unique_key = row_key or f"LIVE:{row.get('TimestampIST')}:{live_count}"
         merged_rows[unique_key] = row
         live_count += 1
 
     print(
-        f"Combined report source counts: historical archive + live table; "
-        f"live rows in range={live_count}; combined unique rows={len(merged_rows)}"
+        f"REPORT SOURCE DIAGNOSTICS | "
+        f"table={TABLE_NAME} | live_partition={LIVE_PARTITION_KEY} | "
+        f"partition_rows={live_partition_rows} | live_rows_in_range={live_count} | "
+        f"live_latest={live_latest_timestamp} | historical_rows_in_range={historical_count} | "
+        f"combined_unique_rows={len(merged_rows)}"
     )
 
     filtered_entities = []
@@ -3059,12 +3072,20 @@ def download_pdf():
             320,
             f"Selected Range Difference (Last - First): {selected_range_difference}"
         )
+        c.drawString(
+            50, 295,
+            f"Historical CSV rows: {result.get('historical_record_count', 0)}"
+        )
+        c.drawString(
+            350, 295,
+            f"Live Azure Table rows: {result.get('live_record_count', 0)}"
+        )
 
         if records:
-            c.drawString(50, 290, f"First Reading Time: {records[0].get('Timestamp', '')}")
-            c.drawString(50, 270, f"Last Reading Time: {records[-1].get('Timestamp', '')}")
+            c.drawString(50, 270, f"First Reading Time: {records[0].get('Timestamp', '')}")
+            c.drawString(50, 250, f"Last Reading Time: {records[-1].get('Timestamp', '')}")
 
-        c.line(50, 240, 750, 240)
+        c.line(50, 225, 750, 225)
 
         # =====================
         # Detailed Data Pages
@@ -3710,6 +3731,28 @@ import io
 #     except Exception as e:
 #         print(f"PDF download error: {e}")
 #         return jsonify({"error": str(e)}), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
