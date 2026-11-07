@@ -1100,17 +1100,13 @@ def api_readings():
                 # "measurementStartTime": format_iso_2ms(
                 #     current_start
                 # ),
-                "measurementStartTime": (
-                    current_start
-                ),                
+                "measurementStartTime": current_start,                
                 
 
                 # "measurementEndTime": format_iso_2ms(
                 #     current_end
                 # ),
-                "measurementEndTime": (
-                    current_end
-                ),
+                "measurementEndTime": current_end,
 
                 "kind": "VESSEL",
                 "mmsi": "419001287",
@@ -1219,13 +1215,9 @@ def api_readings():
             # "toTime": format_iso_2ms(
             #     end_dt
             # ),
-            "fromTime": (
-                start_dt
-            ),
+            "fromTime": start_dt,
 
-            "toTime": (
-                end_dt
-            ),
+            "toTime": end_dt,
             "timezone": "UTC"
         },
 
