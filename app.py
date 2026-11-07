@@ -1115,21 +1115,21 @@ def api_readings():
 
                 "consumption": {
 
-                    "unit": "kL/hr",
+                    # "unit": "kL/hr",
 
                     "mainEnginesTotal": round(
                         total_main_engines,
-                        8
+                        6
                     ),
 
                     "generatorsTotal": round(
                         total_generators,
-                        8
+                        6
                     ),
 
                     "totalConsumption": round(
                         total_consumption,
-                        8
+                        6
                     ),
 
                     "mainEngines": [
@@ -1137,14 +1137,14 @@ def api_readings():
                             "name": "Main Engine 1",
                             "value": round(
                                 main_engine_1_total,
-                                8
+                                6
                             )
                         },
                         {
                             "name": "Main Engine 2",
                             "value": round(
                                 main_engine_2_total,
-                                8
+                                6
                             )
                         }
                     ],
@@ -1154,28 +1154,28 @@ def api_readings():
                             "name": "Generator 1",
                             "value": round(
                                 generator_1_total,
-                                8
+                                6
                             )
                         },
                         {
                             "name": "Generator 2",
                             "value": round(
                                 generator_2_total,
-                                8
+                                6
                             )
                         },
                         {
                             "name": "Generator 3",
                             "value": round(
                                 generator_3_total,
-                                8
+                                6
                             )
                         },
                         {
                             "name": "Generator 4",
                             "value": round(
                                 generator_4_total,
-                                8
+                                6
                             )
                         }
                     ]
