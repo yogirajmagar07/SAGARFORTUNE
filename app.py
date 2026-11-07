@@ -1219,11 +1219,11 @@ def api_readings():
             # "toTime": format_iso_2ms(
             #     end_dt
             # ),
-            "fromTime": format_iso_2ms(
+            "fromTime": (
                 start_dt
             ),
 
-            "toTime": format_iso_2ms(
+            "toTime": (
                 end_dt
             ),
             "timezone": "UTC"
