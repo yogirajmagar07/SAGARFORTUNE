@@ -1097,11 +1097,18 @@ def api_readings():
 
             readings.append({
 
-                "measurementStartTime": format_iso_2ms(
+                # "measurementStartTime": format_iso_2ms(
+                #     current_start
+                # ),
+                "measurementStartTime": (
                     current_start
-                ),
+                ),                
+                
 
-                "measurementEndTime": format_iso_2ms(
+                # "measurementEndTime": format_iso_2ms(
+                #     current_end
+                # ),
+                "measurementEndTime": (
                     current_end
                 ),
 
@@ -1205,6 +1212,13 @@ def api_readings():
 
         "requestWindow": {
 
+            # "fromTime": format_iso_2ms(
+            #     start_dt
+            # ),
+
+            # "toTime": format_iso_2ms(
+            #     end_dt
+            # ),
             "fromTime": format_iso_2ms(
                 start_dt
             ),
@@ -1212,7 +1226,6 @@ def api_readings():
             "toTime": format_iso_2ms(
                 end_dt
             ),
-
             "timezone": "UTC"
         },
 
